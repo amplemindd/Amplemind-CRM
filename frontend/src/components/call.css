@@ -1,0 +1,18 @@
+/* Voice call popup (LiveProvider) */
+.callbox{position:fixed;left:50%;bottom:24px;transform:translateX(-50%);z-index:300;width:min(340px,calc(100vw - 24px));background:#101a2e;color:#fff;border-radius:18px;padding:22px 18px 18px;text-align:center;box-shadow:0 18px 50px rgba(0,0,0,.5);animation:callin .2s}
+@keyframes callin{from{opacity:0;transform:translate(-50%,16px)}to{opacity:1;transform:translate(-50%,0)}}
+.callbox .cav{width:76px;height:76px;border-radius:50%;margin:0 auto 12px;display:grid;place-items:center;font-size:30px;font-weight:800;background:var(--primary,#2563eb);color:#fff;position:relative}
+.callbox.ringing .cav::after,.callbox.incoming .cav::after{content:"";position:absolute;inset:-8px;border-radius:50%;border:2px solid rgba(255,255,255,.45);animation:cring 1.4s infinite}
+@keyframes cring{0%{transform:scale(.85);opacity:.9}100%{transform:scale(1.3);opacity:0}}
+.callbox b{display:block;font-size:18px;line-height:1.2}
+.callbox .cst{display:block;margin-top:4px;opacity:.8;font-size:14px;min-height:20px}
+.callbox .cbtns{display:flex;justify-content:center;gap:22px;margin-top:18px}
+.callbox .cb{width:56px;height:56px;border-radius:50%;border:0;color:#fff;display:grid;place-items:center;cursor:pointer;background:rgba(255,255,255,.16);transition:transform .12s}
+.callbox .cb:hover{transform:scale(1.08)}
+.callbox .cb.red{background:#dc2626}.callbox .cb.green{background:#16a34a}.callbox .cb.on{background:#fff;color:#101a2e}
+.callbox .cb svg{width:26px;height:26px}
+.callbox .cb.red svg{transform:rotate(135deg)}
+.callbox .clbl{display:block;font-size:11.5px;opacity:.75;margin-top:6px}
+.callbox .cwrap{display:flex;flex-direction:column;align-items:center}
+.callbtn svg{width:20px;height:20px}
+@media(max-width:600px){.callbox{bottom:0;left:0;right:0;transform:none;width:auto;border-radius:18px 18px 0 0;padding-bottom:max(18px,env(safe-area-inset-bottom))}@keyframes callin{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}}

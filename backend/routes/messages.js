@@ -3,6 +3,7 @@ const router = require('express').Router();
 const db = require('../config/db');
 const wrap = require('../utils/wrap');
 const chatAttach = require('../utils/chatAttach');
+const notify = require('../utils/notify');
 
 // List me attachment ka bhaari data nahi bhejte (sirf type). Photo / audio alag se /:id/file se aata hai
 const COLS = 'id, task_id, employee_id, sender, sender_name, body, read_admin, read_employee, attach_type, attach_name, created_at';
@@ -40,14 +41,18 @@ router.post('/', wrap(async (req, res) => {
   const body = String(req.body.body || '').trim();
   const att = chatAttach(req.body);
   if (!body && !att.attach) throw wrap.err(400, 'Type a message first');
-  let employee_id = req.body.employee_id; const task_id = req.body.task_id || null;
+  let employee_id = req.body.employee_id; const task_id = req.body.task_id || null; let taskTitle = '';
   if (task_id) {
-    const [[t]] = await db.pool.query('SELECT employee_id FROM tasks WHERE id=?', [task_id]);
+    const [[t]] = await db.pool.query('SELECT employee_id, title FROM tasks WHERE id=?', [task_id]);
+    taskTitle = t && t.title;
     if (!t || !t.employee_id) throw wrap.err(400, 'This task is not assigned to anyone yet');
     employee_id = t.employee_id;
   }
   if (!employee_id) throw wrap.err(400, 'Choose an employee');
   const [x] = await db.pool.query('INSERT INTO messages SET ?', [{ task_id, employee_id, sender: 'admin', sender_name: req.user.name, body: body.slice(0, 2000), read_admin: 1, read_employee: 0, ...att }]);
+  // Employee ko notification + sound
+  await notify({ to_role: 'employee', to_id: employee_id, kind: 'message',
+    title: task_id ? `Admin wrote on task: ${taskTitle}` : `New message from ${req.user.name}`, body: notify.preview(body, att.attach_type), link: '/employee' });
   res.json({ id: x.insertId });
 }));
 

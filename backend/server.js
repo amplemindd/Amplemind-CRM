@@ -13,6 +13,9 @@ app.use(express.json({ limit: '10mb' })); // photos (resize hokar) JSON me aati 
 // Public: login
 app.use('/api/auth', require('./routes/auth'));
 
+// Live alerts (sound) + voice calls: admin aur employee dono ke liye
+app.use('/api/live', authenticate, require('./routes/live'));
+
 // Employee ke routes (sirf employee login wale)
 app.use('/api/my', authenticate, requireRole('employee'), require('./routes/my'));
 

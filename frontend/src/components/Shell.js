@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthContext';
 import Icon from './Icon';
+import { LiveProvider } from './LiveProvider';
 import MessageFab from './MessageFab';
 
 // Admin aur Employee dono ka sidebar layout.
@@ -12,6 +13,7 @@ export default function Shell({ portal, root, nav, badges = {}, theme = '', chil
   const { pathname } = useLocation();
   useEffect(() => { setOpen(false); }, [pathname]);
   return (
+    <LiveProvider>
     <div className={'app ' + theme}>
       <div className="topbar"><button aria-label="Open menu" onClick={() => setOpen(true)}><Icon name="menu" /></button>Amplemind {portal}</div>
       {open && <div className="scrim" onClick={() => setOpen(false)} />}
@@ -35,5 +37,6 @@ export default function Shell({ portal, root, nav, badges = {}, theme = '', chil
       {/* Messages: sidebar me nahi, neeche right corner ka floating button */}
       <MessageFab who={root === '/admin' ? 'admin' : 'employee'} count={(root === '/admin' ? badges.messages : badges.unread) || 0} />
     </div>
+    </LiveProvider>
   );
 }

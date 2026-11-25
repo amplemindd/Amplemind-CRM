@@ -1,8 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { api } from '../api';
 import Shell from './Shell';
-import { useUI } from './UI';
 
 // Admin ka sidebar. Aur page chahiye to yahan ek line add karo (route App.js me pehle se hai).
 const NAV = [
@@ -16,11 +15,8 @@ const NAV = [
 ];
 
 export default function AdminLayout() {
-  const ui = useUI();
   const [badges, setBadges] = useState({});
   const { pathname } = useLocation();
-  const seen = useRef(null);       // jin alerts ko toast dikha chuke hain
-  const lastMsg = useRef(null);
 
   useEffect(() => { api('GET', 'dashboard').then(d => setBadges(b => ({ ...b, followups: d.followups, paymentReminders: d.paymentReminders }))).catch(() => {}); }, [pathname]);
 
@@ -33,16 +29,13 @@ export default function AdminLayout() {
         const s = await api('GET', 'messages/summary');
         if (stop) return;
         setBadges(b => ({ ...b, messages: s.messages, tasksDone: s.tasksDone, paymentReminders: s.paymentReminders }));
-        if (seen.current === null) seen.current = new Set(s.items.map(i => i.id));
-        else s.items.filter(i => !seen.current.has(i.id)).forEach(i => { seen.current.add(i.id); ui.toast(`${i.title}: ${i.body}`); });
-        if (lastMsg.current !== null && s.lastEmployeeMessage > lastMsg.current) ui.toast('New message from your team');
-        lastMsg.current = s.lastEmployeeMessage;
+        // Toast + sound ab LiveProvider (Shell) dikhata hai, yahan sirf badges update hote hain
       } catch (e) { /* network issue, agli baar */ }
     };
     tick();
     const t = setInterval(tick, 10000);
     return () => { stop = true; clearInterval(t); };
-  }, [ui]);
+  }, []);
 
   return <Shell portal="Admin" root="/admin" nav={NAV} badges={badges}><Outlet /></Shell>;
 }

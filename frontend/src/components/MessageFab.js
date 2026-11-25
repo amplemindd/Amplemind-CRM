@@ -3,6 +3,7 @@ import { api } from '../api';
 import { timeAgo } from '../utils';
 import Chat from './Chat';
 import Icon from './Icon';
+import { PhoneIcon, useLive } from './LiveProvider';
 
 const ICON = { image: '📷', audio: '🎤', file: '📎' }, LABEL = { image: 'Photo', audio: 'Voice message', file: 'Document' };
 const preview = t => (!t.last_attach && !t.last_body ? 'No messages yet'
@@ -12,6 +13,7 @@ const preview = t => (!t.last_attach && !t.last_body ? 'No messages yet'
 // who = 'admin' (employees ki list + chat) ya 'employee' (admin se seedhi chat). count = unread messages
 export default function MessageFab({ who, count = 0 }) {
   const admin = who === 'admin';
+  const { startCall, inCall } = useLive();
   const [open, setOpen] = useState(false);
   const [threads, setThreads] = useState(null);
   const [sel, setSel] = useState(null);
@@ -46,6 +48,7 @@ export default function MessageFab({ who, count = 0 }) {
           {!admin ? (
             <>
               <div className="wahead"><span className="av">A</span><div className="wt"><b>Admin</b><small>Ask anything or share an update</small></div>
+                <button type="button" className="btn icon callbtn" aria-label="Call admin" title="Voice call" disabled={inCall} onClick={() => startCall({ name: 'Admin' })}><PhoneIcon /></button>
                 <button type="button" className="btn icon" aria-label="Close" onClick={close}><Icon name="x" /></button></div>
               <Chat me="employee" fill attach placeholder="Message"
                 load={() => api('GET', 'my/messages')} send={(body, x) => api('POST', 'my/messages', { body, ...x })} empty="No messages yet. Write to your admin here." />
@@ -56,6 +59,7 @@ export default function MessageFab({ who, count = 0 }) {
                 <button type="button" className="btn icon" aria-label="Back to list" onClick={() => setSel(null)}><Icon name="back" /></button>
                 <span className="av">{cur.name[0].toUpperCase()}</span>
                 <div className="wt"><b>{cur.name}</b><small>{cur.department || cur.role || 'Employee'}</small></div>
+                <button type="button" className="btn icon callbtn" aria-label={`Call ${cur.name}`} title="Voice call" disabled={inCall} onClick={() => startCall({ employee_id: cur.id, name: cur.name })}><PhoneIcon /></button>
                 <button type="button" className="btn icon" aria-label="Close" onClick={close}><Icon name="x" /></button>
               </div>
               <Chat key={cur.id} me="admin" fill attach placeholder={`Message ${cur.name.split(' ')[0]}`}

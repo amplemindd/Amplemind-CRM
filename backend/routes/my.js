@@ -2,6 +2,7 @@ const router = require('express').Router();
 const db = require('../config/db');
 const wrap = require('../utils/wrap');
 const cleanFor = require('../utils/clean');
+const notify = require('../utils/notify');
 
 const OPEN = "stage NOT IN ('Customer','Lost')";
 const LEAD_FIELDS = ['business', 'contact', 'phone', 'city', 'product', 'stage', 'temperature', 'value', 'followup_date', 'renewal_date', 'notes'];
@@ -46,6 +47,7 @@ router.put('/tasks/:id', wrap(async (req, res) => {
   // Task complete hote hi admin ko alert + task ki chat me line
   if (d.status === 'Done' && t.status !== 'Done') {
     await db.pool.query('INSERT INTO notifications SET ?', [{ kind: 'task_done', title: `${req.user.name} completed a task`, body: t.title + (d.remark ? ` - ${d.remark}` : ''), link: '/admin/tasks', employee_id: req.user.id, is_read: 0 }]);
+    await notify({ to_role: 'admin', kind: 'task_done', title: `${req.user.name} completed a task`, body: t.title + (d.remark ? ` - ${d.remark}` : ''), link: '/admin/tasks' });
     await db.pool.query('INSERT INTO messages SET ?', [{ task_id: t.id, employee_id: req.user.id, sender: 'system', sender_name: req.user.name, body: `${req.user.name} marked this task as completed${d.remark ? '. Note: ' + d.remark : ''}`, read_admin: 0, read_employee: 1 }]);
   }
   res.json({ ok: true });
@@ -138,12 +140,16 @@ router.post('/messages', wrap(async (req, res) => {
   const body = String(req.body.body || '').trim();
   const att = require('../utils/chatAttach')(req.body);
   if (!body && !att.attach) throw wrap.err(400, 'Type a message first');
-  const task_id = req.body.task_id || null;
+  const task_id = req.body.task_id || null; let taskTitle = '';
   if (task_id) {
-    const [[t]] = await db.pool.query('SELECT id FROM tasks WHERE id=? AND employee_id=?', [task_id, req.user.id]);
+    const [[t]] = await db.pool.query('SELECT id, title FROM tasks WHERE id=? AND employee_id=?', [task_id, req.user.id]);
     if (!t) throw wrap.err(404, 'Task not found');
+    taskTitle = t.title;
   }
   const [x] = await db.pool.query('INSERT INTO messages SET ?', [{ task_id, employee_id: req.user.id, sender: 'employee', sender_name: req.user.name, body: body.slice(0, 2000), read_admin: 0, read_employee: 1, ...att }]);
+  // Admin ko notification + sound
+  await notify({ to_role: 'admin', kind: 'message', title: task_id ? `${req.user.name} wrote on task: ${taskTitle}` : `New message from ${req.user.name}`,
+    body: notify.preview(body, att.attach_type), link: '/admin/messages' });
   res.json({ id: x.insertId });
 }));
 

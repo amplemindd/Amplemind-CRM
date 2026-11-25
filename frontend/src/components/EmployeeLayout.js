@@ -1,9 +1,8 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Outlet, useLocation } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from './AuthContext';
 import Shell from './Shell';
-import { useUI } from './UI';
 
 const MY_TASKS = ['/employee/tasks', 'My tasks', 'tasks', 'openTasks'];
 const ME = ['Me', [['/employee/attendance', 'My attendance', 'calendar'], ['/employee/salary', 'My salary slips', 'rupee'], ['/employee/profile', 'My profile', 'user']]];
@@ -19,13 +18,10 @@ export const NAV_BY_DEPT = {
 };
 
 export default function EmployeeLayout() {
-  const ui = useUI();
   const [badges, setBadges] = useState({});
   const { pathname } = useLocation();
   const { user } = useAuth();
   const dept = (user && user.department) || '';
-  const lastMsg = useRef(null);
-  const lastTasks = useRef(null);
 
   useEffect(() => { api('GET', 'my/dashboard').then(d => setBadges(b => ({ ...b, openTasks: d.openTasks, followups: d.followups }))).catch(() => {}); }, [pathname]);
 
@@ -38,15 +34,13 @@ export default function EmployeeLayout() {
         const s = await api('GET', 'my/messages/summary');
         if (stop) return;
         setBadges(b => ({ ...b, unread: s.unread, openTasks: s.openTasks }));
-        if (lastMsg.current !== null && s.last > lastMsg.current) ui.toast('New message from your admin');
-        if (lastTasks.current !== null && s.openTasks > lastTasks.current) ui.toast('You have a new task');
-        lastMsg.current = s.last; lastTasks.current = s.openTasks;
+        // Toast + sound ab LiveProvider (Shell) dikhata hai, yahan sirf badges update hote hain
       } catch (e) { /* agli baar */ }
     };
     tick();
     const t = setInterval(tick, 10000);
     return () => { stop = true; clearInterval(t); };
-  }, [ui]);
+  }, []);
 
   return <Shell portal={dept || 'Employee'} root="/employee" nav={NAV_BY_DEPT[dept] || [['Work', [HOME, MY_TASKS]], ME]} badges={badges} theme="employee"><Outlet /></Shell>;
 }
