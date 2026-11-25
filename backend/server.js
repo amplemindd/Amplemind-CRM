@@ -2,6 +2,8 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const fs = require('fs');
+const DEPTS = require('./config/departments');
 const db = require('./config/db');
 const { authenticate, requireRole, requireDept } = require('./middleware/auth');
 
@@ -15,6 +17,9 @@ app.use('/api/auth', require('./routes/auth'));
 
 // Live alerts (sound) + voice calls: admin aur employee dono ke liye
 app.use('/api/live', authenticate, require('./routes/live'));
+
+// Push notification register (phone / browser)
+app.use('/api/push', authenticate, require('./routes/push'));
 
 // Employee ke routes (sirf employee login wale)
 app.use('/api/my', authenticate, requireRole('employee'), require('./routes/my'));
@@ -42,11 +47,38 @@ app.use('/api/messages', ...admin, require('./routes/messages'));
 app.use('/api/notifications', ...admin, require('./routes/notifications'));
 app.use('/api', (req, res) => res.status(404).send('Not found'));
 
-// App icons (PWA install ke liye) - pwaIcons.js se aate hain
-require('./pwaIcons')(app);
-
 // Production: React build folder yahi se serve hota hai (npm run build ke baad)
-app.use(express.static(path.join(__dirname, '..', 'frontend', 'build')));
+const BUILD = path.join(__dirname, '..', 'frontend', 'build');
+
+// Har role ka apna installable app (PWA): /app/admin, /app/hr, /app/developer, /app/trainer, /app/digital-marketing, /app/sales
+// Phone me ye link kholke "Install app / Add to Home screen" karo. Us app me sirf usi role ka login dikhta hai.
+const APPS = { admin: { name: 'Amplemind Admin', short: 'Admin' } };
+DEPTS.forEach(d => { APPS[d.slug] = { name: `Amplemind ${d.label}`, short: d.label }; });
+const appInfo = (req, res) => { const a = Object.prototype.hasOwnProperty.call(APPS, req.params.slug) && APPS[req.params.slug]; if (!a) res.status(404).send('App not found'); return a; };
+
+app.get('/app/:slug/manifest.webmanifest', (req, res) => {
+  const a = appInfo(req, res); if (!a) return;
+  const s = req.params.slug, icon = n => `/icons/${s}-${n}.png`;
+  res.type('application/manifest+json').set('Cache-Control', 'no-cache').json({
+    id: `/app/${s}/`, name: a.name, short_name: a.short, description: `${a.name} - Amplemind Technologies`,
+    start_url: `/app/${s}/`, scope: `/app/${s}/`, display: 'standalone', orientation: 'portrait',
+    background_color: '#101a2e', theme_color: '#101a2e',
+    icons: [{ src: icon(192), sizes: '192x192', type: 'image/png', purpose: 'any maskable' }, { src: icon(512), sizes: '512x512', type: 'image/png', purpose: 'any maskable' }],
+  });
+});
+app.get('/app/:slug', (req, res) => {
+  const a = appInfo(req, res); if (!a) return;
+  fs.readFile(path.join(BUILD, 'index.html'), 'utf8', (err, html) => {
+    if (err) return res.status(404).send('Frontend build nahi mila. npm run build chalao.');
+    const s = req.params.slug;
+    const head = `<link rel="manifest" href="/app/${s}/manifest.webmanifest"><link rel="apple-touch-icon" href="/icons/${s}-192.png">` +
+      `<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="${a.short}">` +
+      `<script>window.__APP__=${JSON.stringify(s)}</script>`;
+    res.set('Cache-Control', 'no-cache').type('html').send(html.replace(/<title>.*?<\/title>/, `<title>${a.name}</title>`).replace('</head>', head + '</head>'));
+  });
+});
+
+app.use(express.static(BUILD, { setHeaders: (res, p) => { if (/sw\.js$/.test(p)) res.set('Cache-Control', 'no-cache'); } })); // sw.js hamesha fresh
 
 const PORT = process.env.PORT || 5000;
 db.init().then(() => app.listen(PORT, () => console.log(`CRM chal raha hai: http://localhost:${PORT} (API)`)))

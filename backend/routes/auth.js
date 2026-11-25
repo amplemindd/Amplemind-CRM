@@ -9,7 +9,8 @@ const DEPTS = require('../config/departments');
 const limiter = require('../utils/rateLimit');
 const { authenticate } = require('../middleware/auth');
 
-const EXPIRES = process.env.JWT_EXPIRES || '12h';
+// Login lamba chalta hai (phone app me baar-baar login na karna pade). Sirf Logout dabane par hi logout hota hai.
+const EXPIRES = process.env.JWT_EXPIRES || '365d';
 const BAD = 'Invalid username or password';
 const DUMMY = bcrypt.hashSync('not-a-real-password', 10); // user na mile tab bhi same time lage
 const sign = (role, id) => jwt.sign({ role, id }, SECRET, { expiresIn: EXPIRES });

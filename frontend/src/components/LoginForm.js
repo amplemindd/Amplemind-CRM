@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { MODE } from '../appMode';
 import { COMPANY } from '../config';
 import { useAuth } from './AuthContext';
 import Icon from './Icon';
+import InstallButton from './InstallButton';
 
 const ADMIN = {
   badge: 'Admin portal', icon: 'shield', title: 'Admin sign in', sub: 'Manage leads, payments, your team and their logins.',
@@ -49,7 +51,7 @@ export default function LoginForm({ role, dept }) {
       </section>
       <main className="auth-main">
         <form className="auth-card" onSubmit={submit} noValidate>
-          <Link to="/" className="back"><Icon name="back" />All logins</Link>
+          {!MODE && <Link to="/" className="back"><Icon name="back" />All logins</Link>}
           <span className="auth-badge"><Icon name={c.icon} />{c.badge}</span>
           <h1>{c.title}</h1>
           <p className="muted">{c.sub}</p>
@@ -69,6 +71,7 @@ export default function LoginForm({ role, dept }) {
           </div>
           <button className="btn primary lg" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>
           {c.hint && <p className="hint center">{c.hint}</p>}
+          <InstallButton />
         </form>
       </main>
     </div>

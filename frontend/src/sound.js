@@ -8,15 +8,12 @@ const getCtx = () => {
   return ctx;
 };
 
-// Browser sound tabhi bajne deta hai jab user ne page par ek baar click / key dabayi ho. Wahi par notification permission bhi maangte hain.
+// Browser sound tabhi bajne deta hai jab user ne page par ek baar click / key dabayi ho. (Notification permission LiveProvider ke banner se maangte hain)
 let unlocked = false;
 export const unlockAudio = () => {
   if (unlocked || typeof window === 'undefined') return;
   unlocked = true;
-  const on = () => {
-    getCtx();
-    try { if ('Notification' in window && Notification.permission === 'default') Notification.requestPermission(); } catch (e) { /* ignore */ }
-  };
+  const on = () => { getCtx(); };
   ['pointerdown', 'keydown', 'touchstart'].forEach(ev => window.addEventListener(ev, on, { once: true, passive: true }));
 };
 

@@ -1,12 +1,15 @@
 import { Link, Navigate } from 'react-router-dom';
+import { LOGIN_PATH, MODE } from '../appMode';
 import { useAuth } from '../components/AuthContext';
 import Icon from '../components/Icon';
 import { COMPANY, DEPARTMENTS } from '../config';
 
 // Pehla page: Admin ya department login chuno. Login hai to seedha apne panel me.
+// Role ke app (/app/trainer jaise) me ye page nahi dikhta, seedha usi role ka login khulta hai.
 export default function Welcome() {
   const { user } = useAuth();
   if (user) return <Navigate to={`/${user.role}`} replace />;
+  if (MODE) return <Navigate to={LOGIN_PATH} replace />;
   return (
     <div className="welcome">
       <div className="brand"><i>A</i><div><b>Amplemind CRM</b><span>{COMPANY}</span></div></div>

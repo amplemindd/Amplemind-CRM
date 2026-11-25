@@ -26,6 +26,8 @@ module.exports = {
   // Voice calls (admin <-> employee). offer / answer = WebRTC description, ping = call zinda hai ya nahi
   calls: { employee_id: 'i', caller_role: 's', caller_name: 's', callee_name: 's', status: 's', offer: 'l', answer: 'l',
            answered_at: 'dt', ended_at: 'dt', ping: 'dt', end_reason: 's' },
+  // Phone / browser jo push notification ke liye register hue (app band ho tab bhi notification). app = admin ya department ka slug, khali = normal website
+  push_subs: { user_role: 's', user_id: 'i', app: 's', endpoint: 't', p256dh: 't', auth: 's' },
   campaigns: { name: 's', channel: 's', spend: 'n', leads: 'n', start_date: 'd' },
   attendance: { employee_id: 'i', employee: 's', att_date: 'd', check_in: 'dt', check_out: 'dt', note: 's' },
   salary_slips: { employee_id: 'i', employee: 's', designation: 's', slip_month: 's', working_days: 'n', days_present: 'n', basic: 'n', hra: 'n',

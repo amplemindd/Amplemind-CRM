@@ -4,6 +4,7 @@ const router = require('express').Router();
 const db = require('../config/db');
 const wrap = require('../utils/wrap');
 const notify = require('../utils/notify');
+const push = require('../utils/push');
 
 const RING = 30;   // kitne second ring bajegi (frontend bhi yahi use karta hai)
 const GRACE = 10;  // server ka safety time, uske baad ringing call apne aap "missed"
@@ -16,15 +17,11 @@ const mmss = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
 // Chat me call ki line (system message) - unread count nahi badhta
 const sysMsg = (c, text) => db.pool.query('INSERT INTO messages SET ?', [{ task_id: null, employee_id: c.employee_id, sender: 'system', sender_name: c.caller_name, body: text, read_admin: 1, read_employee: 1 }]);
 
-// Offer me video line ho (m=video) to ye video call hai, warna voice call
-const isVideo = c => /m=video /.test(String(c.offer || ''));
-
 // Missed call: samne wale ko alert + chat me line
 const missed = async c => {
   const to = c.caller_role === 'admin' ? 'employee' : 'admin';
-  const v = isVideo(c);
-  await notify({ to_role: to, to_id: to === 'employee' ? c.employee_id : null, kind: 'missed_call', title: `Missed ${v ? 'video ' : ''}call from ${c.caller_name}`, body: '', link: '' });
-  await sysMsg(c, v ? '🎥 Missed video call' : '📞 Missed call');
+  await notify({ to_role: to, to_id: to === 'employee' ? c.employee_id : null, kind: 'missed_call', title: `Missed call from ${c.caller_name}`, body: '', link: '' });
+  await sysMsg(c, '📞 Missed call');
 };
 
 // Purani ringing calls / atki hui active calls / purana data saaf
@@ -42,21 +39,14 @@ const sweep = async force => {
   await db.pool.query('DELETE FROM calls WHERE created_at < DATE_SUB(NOW(), INTERVAL 2 DAY)');
 };
 
-// WebRTC ke ICE servers. STUN hamesha. TURN (audio/video jodne ke liye zaroori, khaaskar mobile data / office wifi par) 2 tareeke se:
-//  1) TURN_URL + TURN_USERNAME + TURN_PASSWORD  (apna ya kisi bhi provider ka TURN; TURN_URL me comma se kai URL de sakte ho)
-//  2) TURN_CREDENTIALS_URL  (Metered / Open Relay dashboard ka poora \"credentials\" URL, jisme apiKey laga hota hai)
-// Key frontend ko nahi dikhti.
+// WebRTC ke ICE servers. STUN hamesha; TURN tab jab .env / GoDaddy me TURN_CREDENTIALS_URL set ho
+// (Open Relay / Metered dashboard se milne wala poora "credentials" URL, jisme apiKey laga hota hai). Key frontend ko nahi dikhti.
 const STUN = [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }];
-const staticTurn = () => {
-  const u = (process.env.TURN_URL || '').split(',').map(x => x.trim()).filter(Boolean);
-  if (!u.length) return [];
-  return [{ urls: u, username: process.env.TURN_USERNAME || '', credential: process.env.TURN_PASSWORD || '' }];
-};
 let iceCache = { at: 0, servers: null };
 router.get('/ice', wrap(async (req, res) => {
-  const own = staticTurn();
   const url = process.env.TURN_CREDENTIALS_URL;
-  if (url && (!iceCache.servers || Date.now() - iceCache.at > 20 * 60 * 1000)) {
+  if (!url) return res.json({ iceServers: STUN, turn: false });
+  if (!iceCache.servers || Date.now() - iceCache.at > 20 * 60 * 1000) {
     try {
       const r = await fetch(url);
       if (!r.ok) throw new Error('HTTP ' + r.status);
@@ -64,9 +54,7 @@ router.get('/ice', wrap(async (req, res) => {
       if (Array.isArray(list) && list.length) iceCache = { at: Date.now(), servers: list };
     } catch (e) { console.error('TURN credentials error:', e.message); }
   }
-  const remote = iceCache.servers || [];
-  const servers = [...(remote.length ? [] : STUN), ...remote, ...own];
-  res.json({ iceServers: servers, turn: !!(remote.length || own.length) });
+  res.json({ iceServers: iceCache.servers || STUN, turn: !!iceCache.servers });
 }));
 
 // Har kuch second me frontend yahi poll karta hai: naye alerts + incoming call
@@ -107,6 +95,8 @@ router.post('/calls', wrap(async (req, res) => {
     await db.pool.query("UPDATE calls SET status='cancelled', ended_at=NOW() WHERE status='ringing' AND employee_id=? AND caller_role='employee'", [employee_id]);
   }
   const [x] = await db.pool.query('INSERT INTO calls SET ?', [{ employee_id, caller_role: myRole(req), caller_name: req.user.name, callee_name, status: 'ringing', offer, ping: db.now }]);
+  // App band ho tab bhi samne wale ke phone par "Incoming call" notification (upar dikhta hai)
+  push.send(adm ? 'employee' : 'admin', adm ? employee_id : null, { title: 'Incoming call', body: `${req.user.name} is calling you`, kind: 'call', tag: 'call' });
   res.json({ id: x.insertId });
 }));
 
@@ -149,7 +139,7 @@ router.post('/calls/:id(\\d+)/end', wrap(async (req, res) => {
     const [x] = await db.pool.query("UPDATE calls SET status='ended', ended_at=NOW(), end_reason='hangup' WHERE id=? AND status='active'", [c.id]);
     if (x.affectedRows) {
       const [[d]] = await db.pool.query('SELECT TIMESTAMPDIFF(SECOND, answered_at, ended_at) AS s FROM calls WHERE id=?', [c.id]);
-      await sysMsg(c, `${isVideo(c) ? '🎥 Video' : '📞 Voice'} call · ${mmss(Math.max(0, d.s || 0))}`);
+      await sysMsg(c, `📞 Voice call · ${mmss(Math.max(0, d.s || 0))}`);
     }
   }
   res.json({ ok: true });
