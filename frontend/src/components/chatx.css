@@ -1,0 +1,77 @@
+/* ===== Chat: gallery / camera / audio / document + floating Messages button ===== */
+.chat{position:relative}
+.chat.fill{flex:1;min-height:0;border:0;border-radius:0}
+.chat.fill .chat-box{flex:1;min-height:0}
+.chat-in .btn.send:disabled{opacity:.5}
+.chat-in textarea{overflow-y:auto}
+
+/* bubble ke andar photo / audio / document */
+.bub.has-att{padding:4px 4px 5px}
+.bub.has-att .who,.bub.has-att p,.bub.has-att .meta{padding-left:7px;padding-right:7px}
+.bub.has-att p{margin-top:4px}
+.att-img{display:block;max-width:240px;width:100%;max-height:280px;object-fit:cover;border-radius:9px;cursor:zoom-in}
+.att-ph{width:200px;height:140px;border-radius:9px;background:rgba(0,0,0,.06);display:grid;place-items:center;color:#8a95a8;font-size:13px}
+.att-ph .ico{width:30px;height:30px}
+.att-doc{display:flex;align-items:center;gap:10px;width:100%;min-width:200px;background:rgba(0,0,0,.06);border:0;border-radius:9px;padding:10px 12px;cursor:pointer;text-align:left;color:var(--text);font-weight:600;font-size:13.5px}
+.att-doc span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.voice{display:flex;align-items:center;gap:10px;min-width:210px;padding:4px 6px 0}
+.vplay{width:38px;height:38px;border-radius:50%;border:0;background:var(--primary);color:#fff;display:grid;place-items:center;cursor:pointer;flex:none}
+.vplay:disabled{opacity:.5;cursor:default}.vplay .ico{width:16px;height:16px;fill:currentColor}
+.vmid{flex:1;min-width:0}.vmid small{display:block;font-size:11px;color:var(--muted);margin-top:1px}
+.vmid input[type=range]{width:100%;height:4px;margin:8px 0 0;padding:0;border:0;box-shadow:none;background:transparent;accent-color:var(--primary);cursor:pointer}
+
+/* + menu (Gallery / Camera / Audio / Document) */
+.wa-scrim{position:absolute;inset:0;z-index:4}
+.wa-menu{position:absolute;left:10px;bottom:66px;z-index:5;background:#fff;border-radius:16px;padding:14px;box-shadow:0 10px 34px rgba(16,26,46,.28);display:grid;grid-template-columns:repeat(4,64px);gap:10px;animation:wafade .12s}
+.wa-menu button{background:none;border:0;display:grid;justify-items:center;gap:6px;font-size:12px;font-weight:700;color:var(--text);cursor:pointer}
+.wa-menu button span{width:46px;height:46px;border-radius:50%;display:grid;place-items:center;color:#fff}
+.wa-menu button span .ico{width:22px;height:22px}
+.wa-menu button:hover span{filter:brightness(1.1)}
+@media(max-width:380px){.wa-menu{grid-template-columns:repeat(4,56px);gap:6px;padding:10px}}
+
+/* bhejne se pehle preview */
+.wa-pend{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:8px 12px;border-top:1px solid var(--line);background:#f4f6fa}
+.wa-pend img{max-height:90px;max-width:60%;border-radius:8px;object-fit:cover}
+.wa-pdoc{display:flex;align-items:center;gap:8px;min-width:0;font-weight:600}.wa-pdoc span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* voice recording bar */
+.wa-rec{align-items:center}
+.wa-rec b{font-variant-numeric:tabular-nums}.wa-rec small{color:var(--muted);flex:1;min-width:0}
+.rdot{width:10px;height:10px;border-radius:50%;background:#e03131;animation:wablink 1s infinite}
+@keyframes wablink{50%{opacity:.25}}
+.wa-clip{flex:none}
+
+/* camera + photo bada dekhna */
+.wa-cam,.lightbox{position:fixed;inset:0;z-index:90;background:#000;display:flex;align-items:center;justify-content:center}
+.wa-cam video{width:100%;height:100%;object-fit:contain;background:#000}.wa-cam video.mirror{transform:scaleX(-1)}
+.wa-camctl{position:absolute;left:0;right:0;bottom:0;display:flex;align-items:center;justify-content:space-around;padding:20px 20px max(24px,env(safe-area-inset-bottom));background:linear-gradient(transparent,rgba(0,0,0,.6))}
+.cbtn{width:46px;height:46px;border-radius:50%;border:0;background:rgba(255,255,255,.18);color:#fff;display:grid;place-items:center;cursor:pointer}.cbtn .ico{width:22px;height:22px}
+.shutter{width:70px;height:70px;border-radius:50%;border:4px solid #fff;background:rgba(255,255,255,.35);cursor:pointer}.shutter:active{background:#fff}
+.lightbox{background:rgba(0,0,0,.92);cursor:zoom-out}.lightbox img{max-width:94vw;max-height:90vh;object-fit:contain;border-radius:6px}
+.lightbox .btn{position:absolute;top:max(14px,env(safe-area-inset-top));right:14px;color:#fff;background:rgba(255,255,255,.16)}
+
+/* ===== floating Messages button (neeche right) ===== */
+.fab{position:fixed;right:20px;bottom:20px;z-index:45;width:58px;height:58px;border-radius:50%;border:0;background:var(--primary);color:#fff;display:grid;place-items:center;cursor:pointer;box-shadow:0 6px 18px rgba(16,26,46,.32);transition:transform .15s,background .15s}
+.fab:hover{transform:scale(1.07);background:var(--primary-d)}
+.fab .ico{width:26px;height:26px}
+.fab .cnt{position:absolute;top:-3px;right:-3px;background:var(--red);color:#fff;font-size:12px;font-weight:800;border-radius:99px;min-width:22px;height:22px;padding:0 6px;display:grid;place-items:center;border:2px solid #fff}
+.app ~ .toasts{bottom:92px}
+
+.wapanel{position:fixed;right:20px;bottom:90px;z-index:70;width:400px;height:min(640px,calc(100vh - 110px));background:#fff;border-radius:16px;box-shadow:0 18px 50px rgba(16,26,46,.35);display:flex;flex-direction:column;overflow:hidden;animation:wafade .15s}
+.wahead{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--primary);color:#fff;flex:none}
+.wahead .av{background:#fff;color:var(--primary)}
+.wahead .wt{flex:1;min-width:0}.wahead .wt b{display:block;line-height:1.2;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.wahead .wt small{display:block;opacity:.85;font-size:12.5px}
+.wahead .btn.icon{color:#fff}.wahead .btn.icon:hover{background:rgba(255,255,255,.18);color:#fff}
+.walist{flex:1;overflow:auto;min-height:0}
+.walist .search{margin:10px 12px;max-width:none;min-width:0}
+.walist .mrow{align-items:center}
+.walist .mrow .av{margin-right:2px}
+.walist .mrow .row{display:flex;gap:10px;align-items:center;min-width:0}
+@keyframes wafade{from{opacity:0}to{opacity:1}}
+
+@media(max-width:600px){
+  .wapanel{inset:0;width:auto;height:auto;border-radius:0;box-shadow:none}
+  .wahead{padding-top:max(10px,env(safe-area-inset-top))}
+  .fab{right:16px;bottom:16px}
+  .app ~ .toasts{bottom:84px}
+}
