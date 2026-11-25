@@ -54,6 +54,7 @@ export function LiveProvider({ children }) {
   const [call, setCall] = useState(null);         // chalti / lag rahi call: { dir, name, phase: connecting|ringing|active, muted }
   const [incoming, setIncoming] = useState(null); // aane wali call: { id, from_name, offer, age }
   const [secs, setSecs] = useState(0);
+  const [link, setLink] = useState('new');       // audio ka asli connection: new | connecting | connected | failed
   const audioEl = useRef(null);
   const R = useRef({}).current;                   // timers, peer connection, call id (re-render ki zaroorat nahi)
 
@@ -69,7 +70,7 @@ export function LiveProvider({ children }) {
     if (R.stream) { R.stream.getTracks().forEach(t => t.stop()); R.stream = null; }
     if (audioEl.current) audioEl.current.srcObject = null;
     R.callId = null; R.dir = null; R.answered = false; R.busy = false;
-    setCall(null); setSecs(0);
+    setCall(null); setSecs(0); setLink('new');
   }, [R]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const startClock = () => {
@@ -77,14 +78,30 @@ export function LiveProvider({ children }) {
     R.clock = setInterval(() => setSecs(Math.floor((Date.now() - t0) / 1000)), 1000);
   };
 
+  // STUN + TURN servers (TURN server se aate hain, 20 min cache)
+  const getIce = async () => {
+    if (R.ice && Date.now() - R.iceAt < 20 * 60 * 1000) return R.ice;
+    try { const r = await api('GET', 'live/ice'); R.ice = { iceServers: [...r.iceServers, ...ICE.iceServers.filter(x => !r.turn && x.credential)] }; R.hasTurn = r.turn; }
+    catch (e) { R.ice = ICE; }
+    R.iceAt = Date.now();
+    return R.ice;
+  };
+
   // Mic + peer connection
   const makePc = async () => {
     if (!navigator.mediaDevices || !window.RTCPeerConnection) throw new Error('Calling needs a modern browser on https');
     const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true }, video: false });
-    const pc = new RTCPeerConnection(ICE);
+    const pc = new RTCPeerConnection(await getIce());
     stream.getTracks().forEach(t => pc.addTrack(t, stream));
     pc.ontrack = e => { if (audioEl.current) { audioEl.current.srcObject = e.streams[0]; audioEl.current.play().catch(() => {}); } };
-    pc.onconnectionstatechange = () => { if (pc.connectionState === 'failed') { ui.toast('Call connection lost', 'err'); hangup(); } };
+    setLink('new');
+    pc.onconnectionstatechange = () => {
+      setLink(pc.connectionState);
+      if (pc.connectionState === 'failed') {
+        ui.toast(R.hasTurn ? 'Call could not connect. Please try again.' : 'Audio could not connect on this network. A TURN server is needed (see setup).', 'err');
+        hangup();
+      }
+    };
     R.pc = pc; R.stream = stream;
     return pc;
   };
@@ -227,7 +244,7 @@ export function LiveProvider({ children }) {
         <div className={'callbox ' + call.phase} role="dialog" aria-label="Voice call">
           <div className="cav">{initial(call.name)}</div>
           <b>{call.name}</b>
-          <span className="cst">{call.phase === 'connecting' ? 'Connecting…' : call.phase === 'ringing' ? 'Ringing…' : mmss(secs)}</span>
+          <span className="cst">{call.phase === 'connecting' ? 'Connecting…' : call.phase === 'ringing' ? 'Ringing…' : link === 'connected' ? mmss(secs) : link === 'disconnected' ? 'Reconnecting…' : 'Connecting audio…'}</span>
           <div className="cbtns">
             <div className="cwrap"><button type="button" className={'cb ' + (call.muted ? 'on' : '')} aria-label={call.muted ? 'Unmute' : 'Mute'} onClick={toggleMute}><MicIcon off={call.muted} /></button><span className="clbl">{call.muted ? 'Unmute' : 'Mute'}</span></div>
             <div className="cwrap"><button type="button" className="cb red" aria-label="End call" onClick={hangup}><PhoneIcon /></button><span className="clbl">End</span></div>

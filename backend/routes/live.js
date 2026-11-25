@@ -38,6 +38,24 @@ const sweep = async force => {
   await db.pool.query('DELETE FROM calls WHERE created_at < DATE_SUB(NOW(), INTERVAL 2 DAY)');
 };
 
+// WebRTC ke ICE servers. STUN hamesha; TURN tab jab .env / GoDaddy me TURN_CREDENTIALS_URL set ho
+// (Open Relay / Metered dashboard se milne wala poora "credentials" URL, jisme apiKey laga hota hai). Key frontend ko nahi dikhti.
+const STUN = [{ urls: 'stun:stun.l.google.com:19302' }, { urls: 'stun:stun1.l.google.com:19302' }];
+let iceCache = { at: 0, servers: null };
+router.get('/ice', wrap(async (req, res) => {
+  const url = process.env.TURN_CREDENTIALS_URL;
+  if (!url) return res.json({ iceServers: STUN, turn: false });
+  if (!iceCache.servers || Date.now() - iceCache.at > 20 * 60 * 1000) {
+    try {
+      const r = await fetch(url);
+      if (!r.ok) throw new Error('HTTP ' + r.status);
+      const list = await r.json();
+      if (Array.isArray(list) && list.length) iceCache = { at: Date.now(), servers: list };
+    } catch (e) { console.error('TURN credentials error:', e.message); }
+  }
+  res.json({ iceServers: iceCache.servers || STUN, turn: !!iceCache.servers });
+}));
+
 // Har kuch second me frontend yahi poll karta hai: naye alerts + incoming call
 router.get('/poll', wrap(async (req, res) => {
   await sweep();
