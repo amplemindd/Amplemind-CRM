@@ -1,12 +1,12 @@
 {
-  "name": "amplemind-crm-backend",
-  "version": "2.0.0",
-  "main": "server.js",
+  "name": "amplemind-crm",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Amplemind CRM - React frontend + Express/MySQL backend (single Node app)",
+  "engines": { "node": ">=18" },
   "scripts": {
-    "start": "node server.js",
-    "dev": "node --watch server.js",
-    "reset-admin": "node scripts/reset-admin.js",
-    "seed": "node scripts/seed-demo.js"
+    "build": "npm --prefix frontend install --include=dev && CI=false npm --prefix frontend run build",
+    "start": "node backend/server.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",

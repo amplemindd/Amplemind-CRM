@@ -16,9 +16,13 @@ db.addDays = (from, n) => {
 };
 
 db.init = async () => {
-  const c = await mysql.createConnection({ host: DB_HOST, user: DB_USER, password: DB_PASSWORD });
-  await c.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\``);
-  await c.end();
+  // GoDaddy / cPanel par DB user ko CREATE DATABASE ki permission nahi hoti (database cPanel se banta hai).
+  // Isliye yahan fail ho to ignore karte hain; database pehle se bana hona chahiye.
+  try {
+    const c = await mysql.createConnection({ host: DB_HOST, user: DB_USER, password: DB_PASSWORD });
+    await c.query(`CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\``);
+    await c.end();
+  } catch (e) { console.log('CREATE DATABASE skip (cPanel me DB pehle se banao):', e.code || e.message); }
   db.pool = mysql.createPool({ host: DB_HOST, user: DB_USER, password: DB_PASSWORD, database: DB_NAME,
                                dateStrings: true, decimalNumbers: true, connectionLimit: 10 });
   // Har connection par India time (attendance / CURDATE() sahi din dikhaye)
