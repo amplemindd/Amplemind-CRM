@@ -42,6 +42,9 @@ app.use('/api/messages', ...admin, require('./routes/messages'));
 app.use('/api/notifications', ...admin, require('./routes/notifications'));
 app.use('/api', (req, res) => res.status(404).send('Not found'));
 
+// App icons (PWA install ke liye) - pwaIcons.js se aate hain
+require('./pwaIcons')(app);
+
 // Production: React build folder yahi se serve hota hai (npm run build ke baad)
 app.use(express.static(path.join(__dirname, '..', 'frontend', 'build')));
 
