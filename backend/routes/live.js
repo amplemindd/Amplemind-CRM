@@ -7,7 +7,7 @@ const notify = require('../utils/notify');
 
 const RING = 30;   // kitne second ring bajegi (frontend bhi yahi use karta hai)
 const GRACE = 10;  // server ka safety time, uske baad ringing call apne aap "missed"
-const LOST = 25;   // itne second ping na aaye to chalti call band
+const LOST = 120;  // itne second tak koi ping na aaye (tab band / net gaya) tabhi chalti call band. Normal me call kabhi apne aap nahi katti
 
 const isAdmin = req => req.user.role === 'admin';
 const myRole = req => (isAdmin(req) ? 'admin' : 'employee');

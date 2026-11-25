@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api';
+import { getSession } from '../auth';
 import { chime, desktopNotify, startRing, unlockAudio } from '../sound';
 import { useAuth } from './AuthContext';
 import { useUI } from './UI';
@@ -97,10 +98,8 @@ export function LiveProvider({ children }) {
     setLink('new');
     pc.onconnectionstatechange = () => {
       setLink(pc.connectionState);
-      if (pc.connectionState === 'failed') {
-        ui.toast(R.hasTurn ? 'Call could not connect. Please try again.' : 'Audio could not connect on this network. A TURN server is needed (see setup).', 'err');
-        hangup();
-      }
+      // Audio na jude to bhi call apne aap nahi kat'ti. Sirf End dabane par (ya samne wale ke kaatne par) band hoti hai.
+      if (pc.connectionState === 'failed') ui.toast(R.hasTurn ? 'Audio is not connected. Check the network, or end the call and try again.' : 'Audio could not connect on this network. A TURN server is needed.', 'err');
     };
     R.pc = pc; R.stream = stream;
     return pc;
@@ -147,7 +146,11 @@ export function LiveProvider({ children }) {
       R.callId = r.id;
       setCall(x => x && { ...x, phase: 'ringing' });
       R.stopRing = startRing('back');
-      R.ringTimer = setTimeout(() => { ui.toast('No answer'); hangup(); }, RING_SECONDS * 1000); // 30 sec me na uthe to auto cut
+      R.ringTimer = setTimeout(async () => { // 30 sec me na uthe to auto cut (par usi pal utha li ho to nahi)
+        try { const c = await api('GET', `live/calls/${R.callId}?got=1`); if (c.status === 'active') return; } catch (e) { /* ignore */ }
+        if (R.answered || !R.callId) return;
+        ui.toast('No answer'); hangup();
+      }, RING_SECONDS * 1000);
       R.poll = setInterval(pollCall, 1000);
     } catch (e) { cleanup(); ui.toast(errText(e), 'err'); }
   }, [R, ui, cleanup, hangup, pollCall]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -221,6 +224,16 @@ export function LiveProvider({ children }) {
     return () => { stop = true; clearInterval(t); if (R.stopIn) { R.stopIn(); R.stopIn = null; } };
   }, [user, ui, R]);
 
+  useEffect(() => { // tab band hone par call ka end signal bhej do (taaki samne wale ki call atki na rahe)
+    const bye = () => {
+      const sess = getSession();
+      if (!R.callId || !sess || !sess.token) return;
+      try { fetch(`/api/live/calls/${R.callId}/end`, { method: 'POST', keepalive: true, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + sess.token }, body: '{}' }); } catch (e) { /* ignore */ }
+    };
+    window.addEventListener('pagehide', bye);
+    return () => window.removeEventListener('pagehide', bye);
+  }, [R]);
+
   useEffect(() => () => { const id = R.callId; cleanup(); if (id) api('POST', `live/calls/${id}/end`).catch(() => {}); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const value = useMemo(() => ({ startCall, inCall: !!call }), [startCall, call]);
@@ -244,7 +257,7 @@ export function LiveProvider({ children }) {
         <div className={'callbox ' + call.phase} role="dialog" aria-label="Voice call">
           <div className="cav">{initial(call.name)}</div>
           <b>{call.name}</b>
-          <span className="cst">{call.phase === 'connecting' ? 'Connecting…' : call.phase === 'ringing' ? 'Ringing…' : link === 'connected' ? mmss(secs) : link === 'disconnected' ? 'Reconnecting…' : 'Connecting audio…'}</span>
+          <span className="cst">{call.phase === 'connecting' ? 'Connecting…' : call.phase === 'ringing' ? 'Ringing…' : link === 'connected' ? mmss(secs) : link === 'disconnected' ? 'Reconnecting…' : link === 'failed' ? 'Audio not connected' : 'Connecting audio…'}</span>
           <div className="cbtns">
             <div className="cwrap"><button type="button" className={'cb ' + (call.muted ? 'on' : '')} aria-label={call.muted ? 'Unmute' : 'Mute'} onClick={toggleMute}><MicIcon off={call.muted} /></button><span className="clbl">{call.muted ? 'Unmute' : 'Mute'}</span></div>
             <div className="cwrap"><button type="button" className="cb red" aria-label="End call" onClick={hangup}><PhoneIcon /></button><span className="clbl">End</span></div>
