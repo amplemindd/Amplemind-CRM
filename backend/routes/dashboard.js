@@ -31,7 +31,9 @@ router.get('/', wrap(async (req, res) => {
         (SELECT COUNT(*) FROM tasks t WHERE t.employee_id=e.id AND t.status<>'Done') AS open_tasks,
         (SELECT COUNT(*) FROM tasks t WHERE t.employee_id=e.id AND t.status='Done') AS done_tasks,
         (SELECT COUNT(*) FROM tasks t WHERE t.employee_id=e.id AND t.status<>'Done' AND t.deadline<CURDATE()) AS overdue,
-        (SELECT COUNT(*) FROM attendance a WHERE a.employee_id=e.id AND a.att_date=CURDATE()) AS present
+        (SELECT COUNT(*) FROM attendance a WHERE a.employee_id=e.id AND a.att_date=CURDATE()) AS present,
+        (SELECT a.check_in FROM attendance a WHERE a.employee_id=e.id AND a.att_date=CURDATE() LIMIT 1) AS check_in,
+        (SELECT a.check_out FROM attendance a WHERE a.employee_id=e.id AND a.att_date=CURDATE() LIMIT 1) AS check_out
       FROM employees e WHERE e.status='Active' ORDER BY e.name`))[0],
   });
 }));

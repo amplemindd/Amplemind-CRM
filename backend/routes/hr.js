@@ -2,12 +2,13 @@
 const router = require('express').Router();
 const db = require('../config/db');
 const wrap = require('../utils/wrap');
+const DOCS = ['aadhaar_photo', 'passbook_photo', 'address_proof', 'resume', 'offer_letter'];
 router.get('/employees/:id/documents', wrap(async (req, res) => {
-  const [[e]] = await db.pool.query('SELECT aadhaar_photo FROM employees WHERE id=?', [req.params.id]);
-  res.json({ aadhaar_photo: (e && e.aadhaar_photo) || '' });
+  const [[e]] = await db.pool.query(`SELECT ${DOCS.join(',')} FROM employees WHERE id=?`, [req.params.id]);
+  res.json(Object.fromEntries(DOCS.map(k => [k, (e && e[k]) || ''])));
 }));
 router.use('/employees', require('../utils/crud')('employees', {
-  hide: ['password_hash', 'aadhaar_photo'],
+  hide: ['password_hash', ...DOCS],
   readonly: ['username', 'password_hash', 'login_enabled', 'last_login', 'department'],
 }));
 router.use('/attendance', require('./attendance'));

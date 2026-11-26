@@ -48,6 +48,11 @@ db.init = async () => {
   // Admin accounts
   await db.pool.query(`CREATE TABLE IF NOT EXISTS admins (id INT AUTO_INCREMENT PRIMARY KEY, username VARCHAR(100) NOT NULL UNIQUE,
     name VARCHAR(255) NULL, password_hash VARCHAR(255) NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)`);
+  // Admin profile (photo, email, phone): purane database me bhi khud add ho jate hain
+  for (const [k, v] of Object.entries({ email: 'VARCHAR(255)', phone: 'VARCHAR(50)', photo: 'LONGTEXT' })) {
+    const [have] = await db.pool.query('SELECT 1 FROM information_schema.columns WHERE table_schema=? AND table_name=? AND column_name=?', [DB_NAME, 'admins', k]);
+    if (!have.length) await db.pool.query(`ALTER TABLE admins ADD COLUMN \`${k}\` ${v} NULL`);
+  }
   const [[{ a }]] = await db.pool.query('SELECT COUNT(*) a FROM admins');
   if (!a) {
     const username = (ADMIN_USER || 'admin').trim().toLowerCase(), password = ADMIN_PASS || 'Admin@123';

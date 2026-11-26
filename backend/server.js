@@ -10,7 +10,7 @@ const { authenticate, requireRole, requireDept } = require('./middleware/auth');
 const app = express();
 app.set('trust proxy', 1);
 app.use(cors());
-app.use(express.json({ limit: '10mb' })); // photos (resize hokar) JSON me aati hain
+app.use(express.json({ limit: '30mb' })); // photos + documents (PDF / photo) JSON me aate hain
 
 // Public: login
 app.use('/api/auth', require('./routes/auth'));

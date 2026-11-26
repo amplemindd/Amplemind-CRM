@@ -4,16 +4,19 @@ const db = require('../config/db');
 const wrap = require('../utils/wrap');
 const DEPTS = require('../config/departments');
 
+// Bhaari documents (photo / PDF): list me nahi aate, edit ya detail kholne par alag se load hote hain
+const DOCS = ['aadhaar_photo', 'passbook_photo', 'address_proof', 'resume', 'offer_letter'];
+
 const router = require('../utils/crud')('employees', {
-  hide: ['password_hash', 'aadhaar_photo'], // aadhaar scan bhaari hai, list me nahi aata
+  hide: ['password_hash', ...DOCS],
   readonly: ['username', 'password_hash', 'login_enabled', 'last_login'],
 });
 
-// Aadhaar scan: sirf edit karte waqt alag se load hota hai
+// Documents: Aadhaar, bank passbook, address proof, resume, offer letter
 router.get('/:id/documents', wrap(async (req, res) => {
-  const [[e]] = await db.pool.query('SELECT aadhaar_photo FROM employees WHERE id=?', [req.params.id]);
+  const [[e]] = await db.pool.query(`SELECT ${DOCS.join(',')} FROM employees WHERE id=?`, [req.params.id]);
   if (!e) throw wrap.err(404, 'Employee not found');
-  res.json({ aadhaar_photo: e.aadhaar_photo || '' });
+  res.json(Object.fromEntries(DOCS.map(k => [k, e[k] || ''])));
 }));
 
 const checkDept = d => { if (!DEPTS.some(x => x.key === d)) throw wrap.err(400, 'Please choose a department'); };

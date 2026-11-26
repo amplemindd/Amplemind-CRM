@@ -63,7 +63,7 @@ export default function Dashboard() {
         ['Pipeline value', n(d.pipeline), false, 'chart', 'violet'],
         ['Pending payments', n(d.pending), false, 'wallet', 'amber'],
         ['Collected this month', n(d.collectedMonth), false, 'rupee', 'green'],
-        ['Present today', `${n(d.presentToday)} / ${n(d.activeEmployees)}`, true, 'check', 'blue'],
+        ['Attendance', `${n(d.presentToday)} / ${n(d.activeEmployees)}`, true, 'check', 'blue'],
       ]} />
 
       <div className="dash">
@@ -79,7 +79,7 @@ export default function Dashboard() {
                 </Link>))}</div>)}
           </div>
 
-          <div className="card"><h3>Present today <em>{present.length}/{team.length}</em><Link className="more" to="/admin/attendance">Attendance</Link></h3>
+          <div className="card"><h3>Attendance <em>{present.length}/{team.length}</em><Link className="more" to="/admin/attendance">Attendance</Link></h3>
             {team.length === 0 ? <p className="muted">No active employees yet.</p> : (
               <>
                 {present.length === 0 && <p className="muted">Nobody has checked in yet today.</p>}
