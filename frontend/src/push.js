@@ -63,3 +63,6 @@ export const canInstall = () => !!deferred;
 export const promptInstall = async () => { if (!deferred) return; deferred.prompt(); try { await deferred.userChoice; } catch (e) { /* ignore */ } deferred = null; window.dispatchEvent(new Event('crm-installable')); };
 export const isStandalone = () => typeof window !== 'undefined' && ((window.matchMedia && window.matchMedia('(display-mode: standalone)').matches) || window.navigator.standalone === true);
 export const isIOS = () => typeof navigator !== 'undefined' && /iphone|ipad|ipod/i.test(navigator.userAgent);
+
+// Service worker page khulte hi register karo (login se pehle bhi). Browser "Install app" tabhi dikhata hai jab ye ready ho.
+if (typeof window !== 'undefined' && 'serviceWorker' in navigator) window.addEventListener('load', () => { registerSW(); });
