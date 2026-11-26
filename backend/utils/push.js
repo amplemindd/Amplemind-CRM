@@ -24,7 +24,7 @@ exports.send = async (to_role, to_id, payload) => {
     const call = payload.kind === 'call';
     await Promise.all(subs.map(async s => {
       const sub = { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } };
-      const body = JSON.stringify({ ...payload, url: s.app ? `/app/${s.app}/` : '/' }); // notification dabane par usi app me khule
+      const body = JSON.stringify({ ...payload, url: s.app ? `/${s.app}/` : '/' }); // notification dabane par usi app me khule
       try { await wp.sendNotification(sub, body, { TTL: call ? 30 : 86400, urgency: 'high' }); }
       catch (e) {
         if (e.statusCode === 404 || e.statusCode === 410) await db.pool.query('DELETE FROM push_subs WHERE id=?', [s.id]); // phone ne app hata di

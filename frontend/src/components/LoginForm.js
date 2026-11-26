@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Link, Navigate, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { MODE } from '../appMode';
 import { COMPANY } from '../config';
 import { useAuth } from './AuthContext';
@@ -21,21 +21,18 @@ export default function LoginForm({ role, dept }) {
     points: ['Your own username and password', 'Only the pages for your department', 'Check in and check out every day'],
     hint: 'Your username and password are given to you by your admin.',
   };
-  const { user, login } = useAuth();
-  const nav = useNavigate();
+  const { login } = useAuth();
   const [u, setU] = useState('');
   const [p, setP] = useState('');
   const [show, setShow] = useState(false);
   const [err, setErr] = useState('');
   const [busy, setBusy] = useState(false);
 
-  if (user && user.role === role) return <Navigate to={`/${role}`} replace />;
-
   const submit = async e => {
     e.preventDefault();
     if (!u.trim() || !p) return setErr('Please enter your username and password');
     setBusy(true); setErr('');
-    try { await login(role, u, p, dept && dept.key); nav(`/${role}`, { replace: true }); }
+    try { await login(role, u, p, dept && dept.key); } // login hote hi usi link par panel khul jata hai
     catch (er) { setErr(/failed to fetch|networkerror/i.test(er.message) ? 'Cannot reach the server. Please check that the backend is running.' : er.message); setBusy(false); }
   };
 

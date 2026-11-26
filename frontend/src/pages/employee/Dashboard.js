@@ -37,7 +37,7 @@ export default function Dashboard() {
         ...(user && user.department === 'Sales Team' ? [['My open leads', s.myLeads, true], ['Follow-ups due', s.followups, true]] : [])]} />
       <div className="dash">
         <div>
-          <div className="sect"><h3>My tasks <em>{s.openTasks}</em><Link className="more" to="/employee/tasks">See all</Link></h3>
+          <div className="sect"><h3>My tasks <em>{s.openTasks}</em><Link className="more" to="tasks">See all</Link></h3>
             {pending.length === 0 ? <div className="panel allgood"><h3>No pending tasks</h3><p className="muted">New tasks from your admin will show up here.</p></div> : (
               <div className="panel">{pending.map(x => {
                 const due = taskDue(x);
@@ -47,7 +47,7 @@ export default function Dashboard() {
                     { label: 'Mark done', kind: 'wa', onClick: () => ops.done(x) }]} />;
               })}</div>)}
           </div>
-          {fu.length > 0 && <div className="sect"><h3>Follow-ups due <em>{fu.length}</em><Link className="more" to="/employee/followups">See all</Link></h3>
+          {fu.length > 0 && <div className="sect"><h3>Follow-ups due <em>{fu.length}</em><Link className="more" to="followups">See all</Link></h3>
             <div className="panel">{fu.slice(0, 5).map(x => <FollowRow key={x.id} c={x} base="my/customers" onDone={load} />)}</div></div>}
         </div>
         <div>

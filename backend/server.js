@@ -50,35 +50,45 @@ app.use('/api', (req, res) => res.status(404).send('Not found'));
 // Production: React build folder yahi se serve hota hai (npm run build ke baad)
 const BUILD = path.join(__dirname, '..', 'frontend', 'build');
 
-// Har role ka apna installable app (PWA): /app/admin, /app/hr, /app/developer, /app/trainer, /app/digital-marketing, /app/sales
-// Phone me ye link kholke "Install app / Add to Home screen" karo. Us app me sirf usi role ka login dikhta hai.
+// Har role ka apna installable app (PWA) aur saaf link: /admin, /hr, /developer, /trainer, /digital-marketing, /sales
+// Us link par sirf usi role ka login dikhta hai, aur wahin se "Install app" hota hai.
 const APPS = { admin: { name: 'Amplemind Admin', short: 'Admin' } };
 DEPTS.forEach(d => { APPS[d.slug] = { name: `Amplemind ${d.label}`, short: d.label }; });
-const appInfo = (req, res) => { const a = Object.prototype.hasOwnProperty.call(APPS, req.params.slug) && APPS[req.params.slug]; if (!a) res.status(404).send('App not found'); return a; };
+const isApp = s => Object.prototype.hasOwnProperty.call(APPS, s);
 
-app.get('/app/:slug/manifest.webmanifest', (req, res) => {
-  const a = appInfo(req, res); if (!a) return;
-  const s = req.params.slug, icon = n => `/icons/${s}-${n}.png`;
+app.get('/:slug/manifest.webmanifest', (req, res, next) => {
+  const s = req.params.slug;
+  if (!isApp(s)) return next();
+  const a = APPS[s], icon = n => `/icons/${s}-${n}.png`;
   res.type('application/manifest+json').set('Cache-Control', 'no-cache').json({
-    id: `/app/${s}/`, name: a.name, short_name: a.short, description: `${a.name} - Amplemind Technologies`,
-    start_url: `/app/${s}/`, scope: `/app/${s}/`, display: 'standalone', orientation: 'portrait',
+    id: `/${s}/`, name: a.name, short_name: a.short, description: `${a.name} - Amplemind Technologies`,
+    start_url: `/${s}/`, scope: `/${s}/`, display: 'standalone', orientation: 'portrait',
     background_color: '#101a2e', theme_color: '#101a2e',
     icons: [{ src: icon(192), sizes: '192x192', type: 'image/png', purpose: 'any maskable' }, { src: icon(512), sizes: '512x512', type: 'image/png', purpose: 'any maskable' }],
   });
 });
-app.get('/app/:slug', (req, res) => {
-  const a = appInfo(req, res); if (!a) return;
+
+// Purane /app/trainer jaise links ko naye saaf link par bhejo
+app.get(['/app/:slug', '/app/:slug/*'], (req, res) => res.redirect(302, isApp(req.params.slug) ? '/' + req.params.slug : '/'));
+
+app.use(express.static(BUILD, { index: false, setHeaders: (res, p) => { if (/sw\.js$/.test(p)) res.set('Cache-Control', 'no-cache'); } })); // sw.js hamesha fresh
+
+// Baaki saare pages (/, /admin, /trainer, /trainer/tasks ...) React ka index.html. Role ke link par us role ka manifest + mode jod dete hain.
+app.get('*', (req, res) => {
+  if (path.extname(req.path)) return res.status(404).send('Not found'); // koi file (js/css/png) nahi mili
   fs.readFile(path.join(BUILD, 'index.html'), 'utf8', (err, html) => {
     if (err) return res.status(404).send('Frontend build nahi mila. npm run build chalao.');
-    const s = req.params.slug;
-    const head = `<link rel="manifest" href="/app/${s}/manifest.webmanifest"><link rel="apple-touch-icon" href="/icons/${s}-192.png">` +
-      `<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="${a.short}">` +
-      `<script>window.__APP__=${JSON.stringify(s)}</script>`;
-    res.set('Cache-Control', 'no-cache').type('html').send(html.replace(/<title>.*?<\/title>/, `<title>${a.name}</title>`).replace('</head>', head + '</head>'));
+    const s = req.path.split('/')[1];
+    if (isApp(s)) {
+      const a = APPS[s];
+      const head = `<link rel="manifest" href="/${s}/manifest.webmanifest"><link rel="apple-touch-icon" href="/icons/${s}-192.png">` +
+        `<meta name="mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-capable" content="yes"><meta name="apple-mobile-web-app-title" content="${a.short}">` +
+        `<script>window.__APP__=${JSON.stringify(s)}</script>`;
+      html = html.replace(/<title>.*?<\/title>/, `<title>${a.name}</title>`).replace('</head>', head + '</head>');
+    }
+    res.set('Cache-Control', 'no-cache').type('html').send(html);
   });
 });
-
-app.use(express.static(BUILD, { setHeaders: (res, p) => { if (/sw\.js$/.test(p)) res.set('Cache-Control', 'no-cache'); } })); // sw.js hamesha fresh
 
 const PORT = process.env.PORT || 5000;
 db.init().then(() => app.listen(PORT, () => console.log(`CRM chal raha hai: http://localhost:${PORT} (API)`)))

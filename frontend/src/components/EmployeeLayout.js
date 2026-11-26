@@ -1,27 +1,32 @@
 import { useEffect, useState } from 'react';
-import { Outlet, useLocation } from 'react-router-dom';
+import { Outlet, useLocation, useParams } from 'react-router-dom';
 import { api } from '../api';
 import { useAuth } from './AuthContext';
 import Shell from './Shell';
 
-const MY_TASKS = ['/employee/tasks', 'My tasks', 'tasks', 'openTasks'];
-const ME = ['Me', [['/employee/attendance', 'My attendance', 'calendar'], ['/employee/salary', 'My salary slips', 'rupee'], ['/employee/profile', 'My profile', 'user']]];
-const HOME = ['/employee', 'Dashboard', 'grid'];
-
-// Har department ka apna sidebar
-export const NAV_BY_DEPT = {
-  'HR': [['HR', [HOME, ['/employee/team', 'Employees', 'id'], ['/employee/team-attendance', 'Team attendance', 'calendar'], ['/employee/salary-slips', 'Salary slips', 'rupee'], MY_TASKS]], ME],
-  'Developer': [['Work', [HOME, MY_TASKS]], ME],
-  'Trainer': [['Work', [HOME, MY_TASKS]], ME],
-  'Digital Marketing': [['Work', [HOME, ['/employee/campaigns', 'Campaigns', 'mega'], MY_TASKS]], ME],
-  'Sales Team': [['Work', [HOME, ['/employee/leads', 'My leads', 'users'], ['/employee/followups', 'Follow-ups', 'bell', 'followups'], MY_TASKS]], ME],
+// Har department ka apna sidebar. b = panel ka link (/hr, /trainer ...)
+const navFor = b => {
+  const HOME = [b, 'Dashboard', 'grid'];
+  const MY_TASKS = [`${b}/tasks`, 'My tasks', 'tasks', 'openTasks'];
+  const ME = ['Me', [[`${b}/attendance`, 'My attendance', 'calendar'], [`${b}/salary`, 'My salary slips', 'rupee'], [`${b}/profile`, 'My profile', 'user']]];
+  return {
+    'HR': [['HR', [HOME, [`${b}/team`, 'Employees', 'id'], [`${b}/team-attendance`, 'Team attendance', 'calendar'], [`${b}/salary-slips`, 'Salary slips', 'rupee'], MY_TASKS]], ME],
+    'Developer': [['Work', [HOME, MY_TASKS]], ME],
+    'Trainer': [['Work', [HOME, MY_TASKS]], ME],
+    'Digital Marketing': [['Work', [HOME, [`${b}/campaigns`, 'Campaigns', 'mega'], MY_TASKS]], ME],
+    'Sales Team': [['Work', [HOME, [`${b}/leads`, 'My leads', 'users'], [`${b}/followups`, 'Follow-ups', 'bell', 'followups'], MY_TASKS]], ME],
+    _default: [['Work', [HOME, MY_TASKS]], ME],
+  };
 };
 
 export default function EmployeeLayout() {
   const [badges, setBadges] = useState({});
   const { pathname } = useLocation();
+  const { slug } = useParams();
   const { user } = useAuth();
   const dept = (user && user.department) || '';
+  const base = '/' + slug;
+  const navs = navFor(base);
 
   useEffect(() => { api('GET', 'my/dashboard').then(d => setBadges(b => ({ ...b, openTasks: d.openTasks, followups: d.followups }))).catch(() => {}); }, [pathname]);
 
@@ -42,5 +47,5 @@ export default function EmployeeLayout() {
     return () => { stop = true; clearInterval(t); };
   }, []);
 
-  return <Shell portal={dept || 'Employee'} root="/employee" nav={NAV_BY_DEPT[dept] || [['Work', [HOME, MY_TASKS]], ME]} badges={badges} theme="employee"><Outlet /></Shell>;
+  return <Shell portal={dept || 'Employee'} root={base} nav={navs[dept] || navs._default} badges={badges} theme="employee"><Outlet /></Shell>;
 }

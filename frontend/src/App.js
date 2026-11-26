@@ -1,11 +1,9 @@
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useParams } from 'react-router-dom';
 import RequireRole from './components/RequireRole';
 import AdminLayout from './components/AdminLayout';
 import EmployeeLayout from './components/EmployeeLayout';
 
 import Welcome from './pages/Welcome';
-import AdminLogin from './pages/auth/AdminLogin';
-import EmployeeLogin from './pages/auth/EmployeeLogin';
 
 import AdminDashboard from './pages/admin/Dashboard';
 import Customers from './pages/admin/Customers';
@@ -37,20 +35,24 @@ import MySalary from './pages/employee/MySalary';
 import MyMessages from './pages/employee/MyMessages';
 import { useAuth } from './components/AuthContext';
 
-// Sirf us department ko dikhao (baaki ko employee dashboard par bhejo)
+// Sirf us department ko dikhao (baaki ko apne dashboard par bhejo)
 function OnlyDept({ dept, children }) {
   const { user } = useAuth();
-  return user && user.department === dept ? children : <Navigate to="/employee" replace />;
+  const { slug } = useParams();
+  return user && user.department === dept ? children : <Navigate to={'/' + slug} replace />;
 }
+// Employee panel ke andar galat page -> apna dashboard
+function ToHome() { const { slug } = useParams(); return <Navigate to={'/' + slug} replace />; }
+// Purane links (/login/hr, /admin/login, /employee) naye saaf links par
+function OldLogin() { const { slug } = useParams(); return <Navigate to={'/' + slug} replace />; }
 
 export default function App() {
   return (
     <Routes>
-      {/* Public */}
+      {/* Public: / par saare logins ka chunav. Har role ka apna link: /admin, /hr, /developer, /trainer, /digital-marketing, /sales */}
       <Route path="/" element={<Welcome />} />
-      <Route path="/admin/login" element={<AdminLogin />} />
-      <Route path="/login/:slug" element={<EmployeeLogin />} />
-      <Route path="/employee/login" element={<Navigate to="/" replace />} />
+      <Route path="/admin/login" element={<Navigate to="/admin" replace />} />
+      <Route path="/login/:slug" element={<OldLogin />} />
 
       {/* Admin panel */}
       <Route path="/admin" element={<RequireRole role="admin"><AdminLayout /></RequireRole>}>
@@ -79,7 +81,7 @@ export default function App() {
       </Route>
 
       {/* Employee panel */}
-      <Route path="/employee" element={<RequireRole role="employee"><EmployeeLayout /></RequireRole>}>
+      <Route path="/:slug" element={<RequireRole role="employee"><EmployeeLayout /></RequireRole>}>
         <Route index element={<EmployeeDashboard />} />
         <Route path="tasks" element={<MyTasks />} />
         <Route path="leads" element={<MyLeads />} />
@@ -92,7 +94,7 @@ export default function App() {
         <Route path="team-attendance" element={<OnlyDept dept="HR"><Attendance base="hr/attendance" /></OnlyDept>} />
         <Route path="salary-slips" element={<OnlyDept dept="HR"><SalarySlips base="hr/salary_slips" /></OnlyDept>} />
         <Route path="campaigns" element={<OnlyDept dept="Digital Marketing"><Campaigns base="dm/campaigns" /></OnlyDept>} />
-        <Route path="*" element={<Navigate to="/employee" replace />} />
+        <Route path="*" element={<ToHome />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" replace />} />

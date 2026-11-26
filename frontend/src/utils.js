@@ -40,9 +40,9 @@ export const genPassword = () => {
   return Array.from(a, n => c[n % c.length]).join('');
 };
 // Login page ka link (admin ya employee)
-export const portalUrl = role => window.location.href.split('#')[0] + '#/' + role + '/login';
-// Department ka login link (e.g. HR -> .../#/login/hr)
-export const deptUrl = slug => window.location.origin + '/#/login/' + slug;
+export const portalUrl = role => window.location.origin + '/' + role;
+// Department ka login link (e.g. HR -> https://site.com/hr)
+export const deptUrl = slug => window.location.origin + '/' + slug;
 export const fmtMonth = m => (m ? new Date(m + '-01T00:00:00').toLocaleDateString('en-IN', { month: 'long', year: 'numeric' }) : '—');
 
 // Salary slip ka print HTML (admin, HR aur employee teeno use karte hain)

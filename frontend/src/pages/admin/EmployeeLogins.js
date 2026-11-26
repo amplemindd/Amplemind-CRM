@@ -8,8 +8,8 @@ import { DEPARTMENTS } from '../../config';
 import { copyText, fmtDate } from '../../utils';
 
 const ALL = 'All';
-// Login link hamesha site ke root se banta hai (e.g. http://localhost:3000/#/login/hr)
-const loginLink = slug => window.location.origin + '/#/login/' + slug;
+// Login link hamesha site ke root se banta hai (e.g. https://site.com/hr)
+const loginLink = slug => window.location.origin + '/' + slug;
 
 // Admin yahin se HR / Developer / Trainer / Digital Marketing / Sales Team ke login banata hai
 export default function EmployeeLogins() {

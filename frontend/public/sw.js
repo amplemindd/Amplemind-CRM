@@ -7,7 +7,7 @@ self.addEventListener('push', e => {
   let d = {};
   try { d = e.data ? e.data.json() : {}; } catch (x) { d = { title: 'Amplemind CRM', body: e.data ? e.data.text() : '' }; }
   const call = d.kind === 'call';
-  const m = /^\/app\/([^/]+)/.exec(d.url || '');
+  const m = /^\/([^/]+)/.exec(d.url || '');
   const icon = '/icons/' + (m ? m[1] : 'admin') + '-192.png';
   e.waitUntil((async () => {
     // App screen par khula hai to wahan toast + sound ho raha hai, notification nahi dikhana
