@@ -1,0 +1,73 @@
+/* =====================================================================
+   theme.css - Standard icon colours poore CRM me: sirf Grey, White, Black.
+   (index.css aur ui.css ke baad load hoti hai, isliye purane rang yahan override hote hain)
+   Light background par: grey / black icon.  Dark background (sidebar, primary button): white icon.
+   ===================================================================== */
+:root{--ico-grey:#5f6878;--ico-black:#1a1d24;--ico-bg:#eceff3}
+
+/* ---------- Login password eye button ---------- */
+.pw{position:relative}
+.pw input{padding-right:50px}
+.pw .btn{position:absolute;right:4px;top:0;bottom:0;margin:auto 0;transform:none!important;height:36px;color:var(--ico-grey)}
+.pw .btn:hover{color:var(--ico-black)}
+.pw .btn:active:not(:disabled){transform:none!important}
+.pw .btn .ico{width:19px;height:19px}
+input::-ms-reveal,input::-ms-clear{display:none} /* Edge ka apna eye hata do, dono eye na dikhein */
+
+/* ---------- Stat / attention icons: sab grey box + black icon ---------- */
+.sico,.sico.blue,.sico.green,.sico.amber,.sico.red,.sico.violet{background:var(--ico-bg);color:var(--ico-black)}
+.portal .pi{background:var(--ico-bg);color:var(--ico-black)}
+.auth-badge{background:var(--ico-bg);color:var(--ico-black)}
+.rhead .ico{color:var(--ico-grey)}
+.remind.ok .ico{color:var(--ico-grey)}
+.empty>.ico{color:var(--ico-grey)}
+
+/* ---------- Buttons ---------- */
+.btn.tint .ico,.btn.wa .ico{color:var(--ico-grey)}
+.btn.tint:hover .ico,.btn.wa:hover .ico{color:var(--ico-black)}
+.btn.primary .ico,.btn.danger .ico{color:#fff}
+.btn.icon{color:var(--ico-grey)}
+.btn.icon:hover{color:var(--ico-black)}
+.btn.icon.del:hover{background:var(--ico-bg);color:var(--ico-black)}
+.acts .wa-i,.acts .wa-i:hover{color:var(--ico-grey)}
+.acts .wa-i:hover{background:var(--ico-bg);color:var(--ico-black)}
+table.rt .acts .wa-i{background:var(--ico-bg)}
+table.rt .acts .btn.icon.del{background:var(--ico-bg);color:var(--ico-grey)}
+.side .me .btn.icon{color:#fff}
+
+/* ---------- Mobile bottom navigation: active = black ---------- */
+.bn{color:var(--ico-grey)}
+.bn.on{color:var(--ico-black)}
+.bn.on::before{background:var(--ico-black)}
+
+/* ---------- Chat attach menu (Gallery / Camera / Audio / Document) ---------- */
+.wa-menu button span{background:#4a5262!important;color:#fff}
+
+/* ---------- Present today (dashboard) ---------- */
+.ptrow{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid var(--line2)}
+.ptrow:last-child{border-bottom:0}
+.ptrow .pmain{flex:1;min-width:0}
+.ptrow .pmain b{display:block;font-weight:700}
+.ptrow .pmain small{display:block;color:var(--muted);font-size:12.5px}
+.ptrow .ptime{text-align:right;font-size:12.5px;color:var(--muted);white-space:nowrap}
+.ptrow .ptime b{display:block;color:var(--text);font-size:13px}
+.ptrow.off{opacity:.62}
+.psub{margin:12px 0 2px;font-size:11.5px;font-weight:800;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+
+/* ---------- File / document picker ---------- */
+.filepick{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.filepick .fbox{display:flex;align-items:center;gap:10px;min-width:0;flex:1 1 180px;border:1px dashed #c3cbd8;border-radius:12px;background:var(--gray-t);padding:9px 12px;color:var(--ico-grey)}
+.filepick .fbox.has{border-style:solid;border-color:var(--line);background:#fff;color:var(--ico-black)}
+.filepick .fbox img{width:40px;height:40px;object-fit:cover;border-radius:8px;flex:none}
+.filepick .fname{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:13px;font-weight:600}
+.filepick .fbtns{display:flex;gap:8px;flex:none}
+.docs .drow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line2)}
+.docs .drow:last-child{border-bottom:0}
+.docs .drow>span{flex:1;min-width:0}
+.docs .drow .muted{font-size:13px}
+
+/* ---------- Admin profile ---------- */
+.aprofile{display:flex;align-items:center;gap:18px;margin:10px 0 14px;flex-wrap:wrap}
+.aprofile .imgbox{width:96px;height:96px;border-style:solid;border-color:var(--line)}
+.card h3 em{background:var(--ico-bg);color:var(--ico-black)}
+.side .side-x,.side .side-x:hover{color:#fff}

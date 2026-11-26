@@ -34,6 +34,12 @@ export function AuthProvider({ children }) {
     if (s && s.token) api('GET', 'auth/me').then(u => { if (fitsMode(u)) { saveSession(s.token, u); setUser(u); } else { clearSession(); setUser(null); } }).catch(() => {});
   }, [ui]);
 
-  const value = useMemo(() => ({ user, login, logout }), [user, login, logout]);
+  // Profile badalne par naam / username turant har jagah badal jaye
+  const updateUser = useCallback(patch => {
+    const s = getSession();
+    setUser(u => { const n = { ...(u || {}), ...patch }; if (s && s.token) saveSession(s.token, n); return n; });
+  }, []);
+
+  const value = useMemo(() => ({ user, login, logout, updateUser }), [user, login, logout, updateUser]);
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

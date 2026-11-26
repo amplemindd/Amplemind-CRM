@@ -30,11 +30,11 @@ export default function Shell({ portal, root, nav, badges = {}, theme = '', chil
   const initial = String((user && user.name) || '?')[0].toUpperCase();
   const uid = user && user.id, urole = user && user.role;
   const [photo, setPhoto] = useState('');
-  // Employee ki profile photo topbar / menu me dikhao (admin ki photo nahi hoti, uska pehla akshar dikhta hai)
+  // Admin / employee ki profile photo topbar aur menu me dikhao (photo na ho to naam ka pehla akshar)
   useEffect(() => {
-    if (urole !== 'employee') { setPhoto(''); return undefined; }
+    if (urole !== 'employee' && urole !== 'admin') { setPhoto(''); return undefined; }
     let on = true;
-    api('GET', 'my/profile').then(p => { if (on) setPhoto((p && p.photo) || ''); }).catch(() => {});
+    api('GET', urole === 'admin' ? 'auth/profile' : 'my/profile').then(p => { if (on) setPhoto((p && p.photo) || ''); }).catch(() => {});
     const h = e => setPhoto(typeof e.detail === 'string' ? e.detail : '');
     window.addEventListener('amp-photo', h); // My profile se photo badalte hi yahan bhi badal jaye
     return () => { on = false; window.removeEventListener('amp-photo', h); };

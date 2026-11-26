@@ -1,5 +1,6 @@
-import { COMPANY } from './config';
+import { COMPANY, EMAIL, WEBSITE } from './config';
 import { CONTACT, LOGO } from './brand';
+import { STAMP } from './stamp';
 import { calcQuote, itemsOf } from './quote';
 import { fmtDate, fmtMonth, inr } from './utils';
 
@@ -40,14 +41,15 @@ export const printA4 = (html, title = 'Document', css = CSS) => {
   if (!w) return alert('Please allow pop-ups for this site to print.');
   w.document.write(`<!doctype html><html><head><meta charset="utf-8"><title>${esc(title)}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;500;600;700&family=Dancing+Script:wght@600&display=swap" rel="stylesheet">
     <style>${css}</style></head><body>${html}</body></html>`);
   w.document.close();
   w.focus();
   // font aur logo load hone ke baad hi print (max 2.5 sec wait)
   const go = () => { if (!w.__printed) { w.__printed = true; w.print(); } };
   const ready = w.document.fonts && w.document.fonts.ready ? w.document.fonts.ready : Promise.resolve();
-  Promise.race([ready, new Promise(r => setTimeout(r, 2500))]).then(() => setTimeout(go, 250));
+  const imgs = Promise.all(Array.from(w.document.images).map(i => (i.decode ? i.decode().catch(() => {}) : null)));
+  Promise.race([Promise.all([ready, imgs]), new Promise(r => setTimeout(r, 2500))]).then(() => setTimeout(go, 250));
 };
 
 // ---------- Quotation ka design (sample PDF jaisa) ----------
@@ -153,7 +155,7 @@ const rupeesInWords = v => {
 };
 
 const SCSS = QCSS + `
-  .sheet{min-height:296mm;padding:10mm 14mm;display:flex;flex-direction:column}
+  .sheet{min-height:296mm;padding:8mm 14mm;display:flex;flex-direction:column}
   .sheet .ft{margin-top:auto}
   .emp{background:#f2f6f3;border-left:1.2mm solid #5aa02c;padding:4mm 6mm;margin-bottom:6mm;display:grid;grid-template-columns:repeat(3,1fr);gap:4mm 6mm}
   .emp .k{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#6b7a72;margin-bottom:.6mm}
@@ -171,23 +173,23 @@ const SCSS = QCSS + `
   .netbox .l{font-size:13px;letter-spacing:1.2px;text-transform:uppercase;font-weight:600}
   .netbox .amt{font-size:28px;font-weight:700;color:#fff}
   .inw{margin-top:3mm;padding:3mm 4mm;border:1px dashed #b8c7be;font-size:12px;color:#2b3b34}.inw b{color:#10241d}
-  .att{display:flex;gap:6mm;margin-top:6mm}
-  .att>div{flex:1;border:1px solid #e1e6e3;padding:3mm 4mm}.att .k{font-size:10px;letter-spacing:1.2px;text-transform:uppercase;color:#6b7a72}.att .v{font-size:16px;font-weight:700;margin-top:.5mm}
-  .sheet .sg{margin-top:16mm}
+  .top .co span{display:block;line-height:1.55}
+  .sg2{display:flex;justify-content:space-between;align-items:flex-end;margin-top:9mm;page-break-inside:avoid}
+  .sg2 .hs{width:68mm}.sg2 .hs .sig{height:15mm;display:flex;align-items:flex-end;font-family:'Dancing Script','Brush Script MT',cursive;font-size:27px;font-weight:600;color:#1f3a9a;line-height:1;padding-bottom:1mm}
+  .sg2 .st{width:66mm;text-align:center}.sg2 .st img{width:30mm;height:30mm;display:block;margin:0 auto 1mm}
+  .sg2 .cap{border-top:2px solid #10241d;padding-top:1.8mm;font-size:12px}.sg2 .cap small{display:block;color:#6b7a72;font-size:10.5px;margin-top:.8mm}
 `;
 
 export const printSalarySlip = r => {
   const n = v => Number(v) || 0;
   const earn = n(r.basic) + n(r.hra) + n(r.allowances) + n(r.bonus);
   const net = r.net !== undefined && r.net !== null && r.net !== '' ? n(r.net) : earn - n(r.deductions);
-  const present = r.days_present === null || r.days_present === undefined || r.days_present === '' ? null : n(r.days_present);
-  const working = r.working_days === null || r.working_days === undefined || r.working_days === '' ? null : n(r.working_days);
-  const absent = present !== null && working !== null ? Math.max(0, working - present) : null;
   const month = fmtMonth(r.slip_month);
+  const hr = String(r.hr_name || '').trim();
   const empId = 'EMP-' + String(r.employee_id || '').padStart(3, '0');
   const ln = (k, v) => `<div class="ln"><span>${k}</span><span>${inr(v)}</span></div>`;
   const html = `<div class="sheet">
-    <div class="top"><div class="lg"><div class="bd"><img src="${LOGO}" alt="Logo"></div><div class="nm"><b>AMPLE<i>MIND</i></b><span>Technologies.Pvt.Ltd</span></div></div><div class="co"><b>${esc(COMPANY)}</b><span>Contact: ${esc(CONTACT)}</span></div></div>
+    <div class="top"><div class="lg"><div class="bd"><img src="${LOGO}" alt="Logo"></div><div class="nm"><b>AMPLE<i>MIND</i></b><span>Technologies.Pvt.Ltd</span></div></div><div class="co"><b>${esc(COMPANY)}</b><span>${esc(EMAIL)}</span><span>${esc(WEBSITE)}</span></div></div>
     <div class="ttl"><h1>SALARY SLIP</h1>
       <div class="m">Pay period: <b>${esc(month)}</b><br>Slip for: <b>${esc(empId)}</b>${r.paid_on ? `<br>Paid on: <b>${esc(fmtDate(r.paid_on))}</b>` : ''}</div></div>
     <div class="emp">
@@ -201,14 +203,12 @@ export const printSalarySlip = r => {
     </div>
     <div class="netbox"><div><div class="l">Net salary</div><small>Total earnings − Total deductions</small></div><div class="amt">${inr(net)}</div></div>
     <div class="inw">Amount in words: <b>${esc(rupeesInWords(net))}</b></div>
-    <div class="att">
-      <div><div class="k">Working days</div><div class="v">${working ?? '—'}</div></div>
-      <div><div class="k">Days present</div><div class="v">${present ?? '—'}</div></div>
-      <div><div class="k">Days absent</div><div class="v">${absent ?? '—'}</div></div>
-    </div>
     ${r.notes ? `<div class="nt"><h4>Notes</h4>${nl(r.notes)}</div>` : ''}
-    <div class="sg"><div class="a">Employee signature<small>Signature and date</small></div><div class="b">For ${esc(COMPANY)}<small>Authorised signatory</small></div></div>
-    <div class="ft"><b>${esc(COMPANY)}</b> &nbsp;|&nbsp; Contact: ${esc(CONTACT)}<br>This is a computer generated salary slip</div>
+    <div class="sg2">
+      <div class="hs"><div class="sig">${hr ? esc(hr) : '&nbsp;'}</div><div class="cap">HR signature<small>${hr ? esc(hr) + ' (HR)' : 'Human Resources'}</small></div></div>
+      <div class="st"><img src="${STAMP}" alt="Company stamp"><div class="cap">For ${esc(COMPANY)}<small>Authorised signatory</small></div></div>
+    </div>
+    <div class="ft"><b>${esc(COMPANY)}</b> &nbsp;|&nbsp; ${esc(EMAIL)} &nbsp;|&nbsp; ${esc(WEBSITE)}<br>This is a computer generated salary slip</div>
   </div>`;
   printA4(html, `Salary slip ${month} - ${r.employee || ''}`.trim(), SCSS);
 };

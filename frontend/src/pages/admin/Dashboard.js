@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { api } from '../../api';
-import { greeting, inr } from '../../utils';
+import { fmtTime, greeting, inr } from '../../utils';
 import { useAuth } from '../../components/AuthContext';
 import Icon from '../../components/Icon';
 import PageHead from '../../components/PageHead';
@@ -42,6 +42,9 @@ export default function Dashboard() {
 
   const tasksAll = n(d.tasksDone) + n(d.tasksOpen);
   const maxProd = Math.max(1, ...(d.byProduct || []).map(p => n(p.customers) + n(p.leads)));
+  const team = d.team || [];
+  const present = team.filter(m => n(m.present));
+  const absent = team.filter(m => !n(m.present));
   const cpl = n(d.adLeads) ? Math.round(n(d.adSpend) / n(d.adLeads)) : 0;
 
   return (
@@ -76,16 +79,24 @@ export default function Dashboard() {
                 </Link>))}</div>)}
           </div>
 
-          <div className="card"><h3>Team today <Link className="more" to="/admin/attendance">Attendance</Link></h3>
-            {d.team.length === 0 ? <p className="muted">No active employees yet.</p> : d.team.map(m => (
-              <div className="trow" key={m.id}>
-                <span className="av sm">{String(m.name || '?')[0].toUpperCase()}</span>
-                <div className="tmain"><b>{m.name}</b><small>{m.role || 'Employee'}</small></div>
-                <div className="tstat">
-                  <span className={'pill ' + (n(m.present) ? 'green' : 'gray')}>{n(m.present) ? 'Present' : 'Absent'}</span>
-                  <small>{n(m.done_tasks)} done · {n(m.open_tasks)} open{n(m.overdue) > 0 && <b className="late"> · {n(m.overdue)} late</b>}</small>
-                </div>
-              </div>))}
+          <div className="card"><h3>Present today <em>{present.length}/{team.length}</em><Link className="more" to="/admin/attendance">Attendance</Link></h3>
+            {team.length === 0 ? <p className="muted">No active employees yet.</p> : (
+              <>
+                {present.length === 0 && <p className="muted">Nobody has checked in yet today.</p>}
+                {present.map(m => (
+                  <div className="ptrow" key={m.id}>
+                    <span className="av sm">{String(m.name || '?')[0].toUpperCase()}</span>
+                    <div className="pmain"><b>{m.name}</b><small>{m.role || 'Employee'}</small></div>
+                    <div className="ptime"><b>In {fmtTime(m.check_in)}</b>{m.check_out ? `Out ${fmtTime(m.check_out)}` : 'Working'}</div>
+                  </div>))}
+                {absent.length > 0 && <div className="psub">Not checked in ({absent.length})</div>}
+                {absent.map(m => (
+                  <div className="ptrow off" key={m.id}>
+                    <span className="av sm">{String(m.name || '?')[0].toUpperCase()}</span>
+                    <div className="pmain"><b>{m.name}</b><small>{m.role || 'Employee'}</small></div>
+                    <span className="pill gray">Absent</span>
+                  </div>))}
+              </>)}
           </div>
         </div>
 

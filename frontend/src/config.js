@@ -1,6 +1,8 @@
 // Frontend alag host par ho to API_BASE me backend ka poora URL do (e.g. 'https://api.example.com/api/')
 export const API_BASE = '/api/';
 export const COMPANY = 'Amplemind Technologies Pvt Ltd';
+export const EMAIL = 'contact@amplemindtechnologies.com';
+export const WEBSITE = 'amplemindtechnologies.com';
 export const STAGES = ['Lead', 'Contacted', 'Quotation', 'Negotiation', 'Customer', 'Lost'];
 export const TASK_STATUS = ['Open', 'In Progress', 'Done'];
 export const PRIORITIES = ['High', 'Medium', 'Low'];

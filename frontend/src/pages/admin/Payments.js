@@ -6,6 +6,7 @@ import { COMPANY } from '../../config';
 
 const sum = (rows, f) => rows.reduce((a, r) => a + f(r), 0);
 const STATUS = ['Pending', 'Partly paid', 'Paid'];
+const MODES = ['Cash', 'UPI', 'Card', 'Net banking', 'Bank transfer', 'Cheque', 'Other']; // Payment plan / receive ke payment mode
 const pend = r => (+r.total || 0) - (+r.paid || 0);
 const isOverdue = r => r.next_due && r.next_due.slice(0, 10) < today() && r.status !== 'Paid';
 // Auto reminder: due date se "remind_before" din pehle se dikhna shuru, bhejne ke baad aaj ke liye hat jata hai
@@ -53,22 +54,23 @@ const config = {
   ],
   fields: [F('client', 'Client'), F('phone', 'Phone (for WhatsApp)'), F('for_what', 'For (e.g. Website)'), F('total', 'Total ₹', 'money'),
     F('paid', 'Paid ₹', 'money', { def: () => 0 }), F('next_due', 'Next instalment due date', 'date'), F('next_amount', 'Next instalment amount ₹', 'money'),
+    F('method', 'Payment mode', 'select', { opts: MODES, def: () => 'Cash' }),
     F('status', 'Status', 'select', { opts: STATUS, def: () => 'Pending' }),
     F('auto_reminder', 'Auto reminder', 'select', { opts: ['On', 'Off'], def: () => 'On', section: 'Instalment reminders' }),
     F('remind_before', 'Remind me (days before due date)', 'number', { def: () => 2, hint: '0 = only on the due date' }),
     F('repeat_days', 'Instalment repeats every (days)', 'number', { hint: 'Optional. e.g. 30 = next due date moves 30 days after each payment' })],
-  cols: ['client', 'for_what', 'total', 'paid', 'pending', 'next_due', 'status', 'auto_reminder'],
-  labels: { for_what: 'For', total: 'Total (₹)', paid: 'Paid (₹)', pending: 'Pending (₹)', next_due: 'Next due', auto_reminder: 'Reminder', remind_before: 'Remind before (days)', repeat_days: 'Repeats every (days)', next_amount: 'Next instalment (₹)' },
+  cols: ['client', 'for_what', 'method', 'total', 'paid', 'pending', 'next_due', 'status', 'auto_reminder'],
+  labels: { for_what: 'For', method: 'Payment mode', total: 'Total (₹)', paid: 'Paid (₹)', pending: 'Pending (₹)', next_due: 'Next due', auto_reminder: 'Reminder', remind_before: 'Remind before (days)', repeat_days: 'Repeats every (days)', next_amount: 'Next instalment (₹)' },
   render: {
     client: r => <b>{r.client}</b>,
     auto_reminder: r => (r.auto_reminder === 'On' ? <span className="pill green">On · {+r.remind_before || 0}d before</span> : <span className="pill gray">Off</span>),
   },
-  detailFields: ['phone', 'for_what', 'total', 'paid', 'pending', 'next_due', 'next_amount', 'auto_reminder', 'remind_before', 'repeat_days'],
+  detailFields: ['phone', 'for_what', 'method', 'total', 'paid', 'pending', 'next_due', 'next_amount', 'auto_reminder', 'remind_before', 'repeat_days'],
   actions: (r, reload, ui) => [
     ...(r.status !== 'Paid' ? [['Receive', async () => {
       const v = await ui.ask(`Receive payment from ${r.client}`, [
         { name: 'amount', label: 'Amount received (₹)', type: 'number', def: r.next_amount || '', required: true },
-        { name: 'method', label: 'Method', opts: ['UPI', 'Cash', 'Bank transfer', 'Cheque', 'Card', 'Other'], def: 'UPI' },
+        { name: 'method', label: 'Method', opts: MODES, def: r.method || 'UPI' },
         { name: 'reference', label: 'Reference / UTR (optional)' },
         { name: 'next_due', label: 'Next instalment date (optional)', type: 'date', hint: r.repeat_days ? `Blank = ${r.repeat_days} days after the last due date` : 'Leave blank if no more instalments' },
         { name: 'next_amount', label: 'Next instalment amount (optional)', type: 'number' }], 'Record payment');

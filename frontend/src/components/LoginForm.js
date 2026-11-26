@@ -63,7 +63,8 @@ export default function LoginForm({ role, dept }) {
             <label htmlFor="login_pass">Password</label>
             <div className="pw">
               <input id="login_pass" type={show ? 'text' : 'password'} autoComplete="current-password" value={p} onChange={e => { setP(e.target.value); setErr(''); }} />
-              <button type="button" className="btn icon" aria-label={show ? 'Hide password' : 'Show password'} onClick={() => setShow(s => !s)}><Icon name={show ? 'eyeoff' : 'eye'} /></button>
+              <button type="button" className="btn icon" aria-label={show ? 'Hide password' : 'Show password'} aria-pressed={show} tabIndex={-1}
+                onMouseDown={e => e.preventDefault()} onClick={() => setShow(s => !s)}><Icon name={show ? 'eyeoff' : 'eye'} /></button>
             </div>
           </div>
           <button className="btn primary lg" disabled={busy}>{busy ? 'Signing in…' : 'Sign in'}</button>

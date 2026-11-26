@@ -1,3 +1,4 @@
+import { useAuth } from '../../components/AuthContext';
 import ListPage from '../../components/ListPage';
 import { printSalarySlip } from '../../printA4';
 import { F, fmtMonth, inr, today } from '../../utils';
@@ -24,7 +25,7 @@ const Preview = r => {
 };
 
 // base = 'salary_slips' (admin) ya 'hr/salary_slips' (HR login). Employee dropdown bhi usi hisab se.
-const make = hr => ({
+const make = (hr, me) => ({
   noun: 'salary slip', primary: 'employee', secondary: r => r.designation, required: ['employee_id', 'slip_month'],
   title: 'Salary slips', desc: 'Generate, manage and print employee salary slips.', addLabel: 'Generate salary slip',
   filters: [{ field: 'slip_month', label: 'Month' }, { field: 'employee', label: 'Employee' }],
@@ -35,20 +36,22 @@ const make = hr => ({
     ['Total payout', sum(rows, r => +r.net || 0), false, 'wallet', 'amber'],
     ['Average net salary', rows.length ? Math.round(sum(rows, r => +r.net || 0) / rows.length) : 0, false, 'chart', 'blue'],
   ],
-  labels: { employee_id: 'Employee ID', designation: 'Designation', slip_month: 'Month', net: 'Salary (₹)', employee: 'Employee name', days_present: 'Days present', paid_on: 'Paid on' },
+  labels: { hr_name: 'HR name', employee_id: 'Employee ID', designation: 'Designation', slip_month: 'Month', net: 'Salary (₹)', employee: 'Employee name', days_present: 'Days present', paid_on: 'Paid on' },
   fields: [F('employee_id', 'Employee', 'ref', { src: hr ? 'hr/employees' : 'employees', valKey: 'id' }), F('slip_month', 'Month', 'month', { def: () => thisMonth() }),
     F('working_days', 'Working days', 'number'), F('days_present', 'Days present', 'number'),
+    F('hr_name', 'HR name (shown on the PDF)', 'ref', { src: hr ? 'hr/employees' : 'employees', where: x => x.department === 'HR', def: () => (hr ? me : ''), hint: 'Select the HR who is generating this slip. The name appears as the HR signature on the PDF.' }),
     F('basic', 'Basic ₹', 'money'), F('hra', 'HRA ₹', 'money'), F('allowances', 'Allowances ₹', 'money'), F('bonus', 'Bonus ₹', 'money'),
     F('deductions', 'Deductions ₹', 'money'), F('paid_on', 'Paid on', 'date'), F('notes', 'Notes', 'textarea')],
   cols: ['employee_id', 'employee', 'designation', 'slip_month', 'days_present', 'net', 'paid_on'],
   render: { employee_id: r => <b style={{ color: 'var(--primary)' }}>EMP-{String(r.employee_id || '').padStart(3, '0')}</b>, employee: r => <b>{r.employee}</b>,
     designation: r => r.designation || <span className="muted">—</span>, slip_month: r => fmtMonth(r.slip_month), net: r => <b>{inr(r.net)}</b> },
-  detailFields: ['notes'],
+  detailFields: ['hr_name', 'notes'],
   detailExtra: Preview,
   csv: { employee_id: r => 'EMP-' + String(r.employee_id || '').padStart(3, '0'), slip_month: r => r.slip_month },
   actions: r => [['Print', () => printSalarySlip(r)]],
 });
 
 export default function SalarySlips({ base = 'salary_slips' }) {
-  return <ListPage resource={base} cfg={make(base !== 'salary_slips')} />;
+  const { user } = useAuth();
+  return <ListPage resource={base} cfg={make(base !== 'salary_slips', (user && user.name) || '')} />;
 }

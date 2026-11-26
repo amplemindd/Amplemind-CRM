@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { api } from '../api';
 import Icon from './Icon';
+import FilePick from './FilePick';
 import ImagePick from './ImagePick';
 import { useUI } from './UI';
 
 // Add / Edit ka side drawer (cfg.fields ke hisab se)
 // field.type: text | textarea | number | money | date | month | time | select | ref | image
 //   ref: { type:'ref', src:'employees', valKey:'id' } -> dropdown server se, valKey wali value save hoti hai (default: name)
+//   file: { type:'file' } -> photo ya PDF / Word document (max 3 MB)
+//   ref me where: x => bool se list filter hoti hai (e.g. sirf HR employees)
 //   image: { type:'image', round:true, maxPx:400 }  lazy:true = edit par alag se load hota hai (`${resource}/${id}/documents`)
 //   section: 'Bank details' -> is field se pehle heading
 export default function FormDrawer({ resource, cfg, row, onClose, onSaved }) {
@@ -21,7 +24,7 @@ export default function FormDrawer({ resource, cfg, row, onClose, onSaved }) {
 
   useEffect(() => {
     cfg.fields.filter(f => f.type === 'ref').forEach(f =>
-      api('GET', f.src).then(list => setRefs(r => ({ ...r, [f.name]: list.map(x => ({ v: x[f.valKey || 'name'], l: (x.name || x.business) + (x.status === 'Inactive' ? ' (inactive)' : '') })) }))).catch(() => {}));
+      api('GET', f.src).then(list => setRefs(r => ({ ...r, [f.name]: list.filter(f.where || (() => true)).map(x => ({ v: x[f.valKey || 'name'], l: (x.name || x.business) + (x.status === 'Inactive' ? ' (inactive)' : '') })) }))).catch(() => {}));
     if (row && lazy.length) api('GET', `${resource}/${row.id}/documents`).then(d => { setVals(v => ({ ...v, ...Object.fromEntries(lazy.map(f => [f.name, d[f.name] || ''])) })); setLoaded(lazy.map(f => f.name)); }).catch(() => {});
     const k = e => e.key === 'Escape' && closeRef.current();
     window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k);
@@ -48,7 +51,7 @@ export default function FormDrawer({ resource, cfg, row, onClose, onSaved }) {
           <div className="fg">
             {cfg.fields.map((f, i) => {
               const opts = f.type === 'select' ? f.opts.map(o => ({ v: o, l: o })) : refs[f.name] || [];
-              const wide = f.type === 'textarea' || f.type === 'image' || f.full;
+              const wide = f.type === 'textarea' || f.type === 'image' || f.type === 'file' || f.full;
               return (
                 <div key={f.name} style={{ display: 'contents' }}>
                   {f.section && <h3 className="fsec w">{f.section}</h3>}
@@ -63,6 +66,8 @@ export default function FormDrawer({ resource, cfg, row, onClose, onSaved }) {
                     ) : f.type === 'image' ? (
                       <ImagePick id={'f_' + f.name} value={vals[f.name]} round={f.round} maxPx={f.maxPx || 400} quality={f.quality || 0.82} label={f.pick || 'Choose file'}
                         onChange={v => set(f.name, v)} />
+                    ) : f.type === 'file' ? (
+                      <FilePick id={'f_' + f.name} value={vals[f.name]} label={f.pick || 'Choose file'} onChange={v => set(f.name, v)} />
                     ) : (
                       <input id={'f_' + f.name} autoFocus={i === 0} type={['money', 'number'].includes(f.type) ? 'number' : ['date', 'month', 'time'].includes(f.type) ? f.type : 'text'} step="any"
                         value={vals[f.name]} onChange={e => set(f.name, e.target.value)} />
