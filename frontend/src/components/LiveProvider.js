@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
 import { api } from '../api';
 import { getSession } from '../auth';
+import { askPermission, closeNotifications, pushSupported, registerSW, subscribePush } from '../push';
 import { chime, desktopNotify, startRing, unlockAudio } from '../sound';
 import { useAuth } from './AuthContext';
 import { useUI } from './UI';
@@ -68,6 +69,7 @@ export function LiveProvider({ children }) {
   const [call, setCall] = useState(null);         // chalti / lag rahi call: { dir, name, phase: connecting|ringing|active, muted, video, hasCam, camOff }
   const [incoming, setIncoming] = useState(null); // aane wali call: { id, from_name, offer, age, video }
   const [secs, setSecs] = useState(0);
+  const [perm, setPerm] = useState(() => (pushSupported() ? Notification.permission : 'unsupported')); // notification permission
   const [link, setLink] = useState('new');       // audio/video ka asli connection: new | connecting | connected | failed
   const [remoteVideo, setRemoteVideo] = useState(false); // samne wale ki video aa rahi hai?
   const remoteEl = useRef(null);                  // samne wale ki awaaz + video (voice call me chhupa rehta hai, par awaaz yahi se aati hai)
@@ -75,6 +77,18 @@ export function LiveProvider({ children }) {
   const R = useRef({}).current;                   // timers, peer connection, call id (re-render ki zaroorat nahi)
 
   useEffect(() => { unlockAudio(); }, []);
+
+  // Push notification: app band ho tab bhi. Permission mil chuki ho to is phone ko register karo; app khulte hi purane notification hata do.
+  useEffect(() => {
+    if (!user) return undefined;
+    registerSW();
+    if (pushSupported() && Notification.permission === 'granted') subscribePush().catch(() => {});
+    closeNotifications();
+    const vis = () => { if (!document.hidden) closeNotifications(); };
+    document.addEventListener('visibilitychange', vis);
+    return () => document.removeEventListener('visibilitychange', vis);
+  }, [user]);
+  const enableNotif = async () => setPerm(await askPermission());
 
   const stopTimers = () => {
     ['poll', 'ringTimer', 'clock'].forEach(k => { clearInterval(R[k]); clearTimeout(R[k]); R[k] = null; });
@@ -313,6 +327,13 @@ export function LiveProvider({ children }) {
   return (
     <Ctx.Provider value={value}>
       {children}
+      {perm === 'default' && !call && !incoming && (
+        <div className="notifbar" role="region" aria-label="Notifications">
+          <span>🔔 Turn on notifications to get messages, tasks and calls even when the app is closed.</span>
+          <button type="button" className="btn primary" onClick={enableNotif}>Turn on</button>
+          <button type="button" className="btn" onClick={() => setPerm('later')}>Not now</button>
+        </div>
+      )}
       {incoming && !call && (
         <div className="callbox incoming" role="alertdialog" aria-label={incoming.video ? 'Incoming video call' : 'Incoming call'}>
           <div className="cav">{initial(incoming.from_name)}</div>

@@ -4,6 +4,7 @@ const router = require('express').Router();
 const db = require('../config/db');
 const wrap = require('../utils/wrap');
 const notify = require('../utils/notify');
+const push = require('../utils/push');
 
 const RING = 30;   // kitne second ring bajegi (frontend bhi yahi use karta hai)
 const GRACE = 10;  // server ka safety time, uske baad ringing call apne aap "missed"
@@ -107,6 +108,8 @@ router.post('/calls', wrap(async (req, res) => {
     await db.pool.query("UPDATE calls SET status='cancelled', ended_at=NOW() WHERE status='ringing' AND employee_id=? AND caller_role='employee'", [employee_id]);
   }
   const [x] = await db.pool.query('INSERT INTO calls SET ?', [{ employee_id, caller_role: myRole(req), caller_name: req.user.name, callee_name, status: 'ringing', offer, ping: db.now }]);
+  // App band ho tab bhi samne wale ke phone par "Incoming call" notification (upar dikhta hai)
+  push.send(adm ? 'employee' : 'admin', adm ? employee_id : null, { title: isVideo({ offer }) ? 'Incoming video call' : 'Incoming call', body: `${req.user.name} is calling you`, kind: 'call', tag: 'call' });
   res.json({ id: x.insertId });
 }));
 
