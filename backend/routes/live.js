@@ -21,7 +21,13 @@ const sysMsg = (c, text) => db.pool.query('INSERT INTO messages SET ?', [{ task_
 const isVideo = c => /m=video /.test(String(c.offer || ''));
 
 // Missed call: samne wale ko alert + chat me line
+// Call ka notification (phone me ring + vibrate) turant band karao: utha li gayi / cut gayi / time khatam
+const closeRing = c => {
+  const to = c.caller_role === 'admin' ? 'employee' : 'admin';
+  push.send(to, to === 'employee' ? c.employee_id : null, { title: 'Call ended', body: '', kind: 'call_end' });
+};
 const missed = async c => {
+  closeRing(c);
   const to = c.caller_role === 'admin' ? 'employee' : 'admin';
   const v = isVideo(c);
   await notify({ to_role: to, to_id: to === 'employee' ? c.employee_id : null, kind: 'missed_call', title: `Missed ${v ? 'video ' : ''}call from ${c.caller_name}`, body: '', link: '' });
@@ -137,6 +143,7 @@ router.post('/calls/:id(\\d+)/answer', wrap(async (req, res) => {
   if (!answer || answer.length > 100000) throw wrap.err(400, 'Could not connect the call');
   const [x] = await db.pool.query("UPDATE calls SET status='active', answer=?, answered_at=NOW(), ping=NOW() WHERE id=? AND status='ringing'", [answer, c.id]);
   if (!x.affectedRows) throw wrap.err(409, 'This call is no longer available');
+  closeRing(c); // utha li: baaki phones par ring band
   res.json({ ok: true });
 }));
 
@@ -147,7 +154,7 @@ router.post('/calls/:id(\\d+)/end', wrap(async (req, res) => {
   if (c.status === 'ringing') {
     const st = mine ? 'cancelled' : 'declined';
     const [x] = await db.pool.query("UPDATE calls SET status=?, ended_at=NOW(), end_reason=? WHERE id=? AND status='ringing'", [st, st, c.id]);
-    if (x.affectedRows) { if (mine) await missed(c); else await sysMsg(c, '📞 Call declined'); }
+    if (x.affectedRows) { if (mine) await missed(c); else { closeRing(c); await sysMsg(c, '📞 Call declined'); } }
   } else if (c.status === 'active') {
     const [x] = await db.pool.query("UPDATE calls SET status='ended', ended_at=NOW(), end_reason='hangup' WHERE id=? AND status='active'", [c.id]);
     if (x.affectedRows) {

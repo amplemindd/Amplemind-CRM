@@ -21,7 +21,7 @@ exports.send = async (to_role, to_id, payload) => {
     const [subs] = to_role === 'admin'
       ? await db.pool.query("SELECT * FROM push_subs WHERE user_role='admin'")
       : await db.pool.query("SELECT * FROM push_subs WHERE user_role='employee' AND user_id=?", [to_id]);
-    const call = payload.kind === 'call';
+    const call = payload.kind === 'call' || payload.kind === 'call_end'; // call ke push 30 sec me expire
     await Promise.all(subs.map(async s => {
       const sub = { endpoint: s.endpoint, keys: { p256dh: s.p256dh, auth: s.auth } };
       const body = JSON.stringify({ ...payload, url: s.app ? `/${s.app}/` : '/' }); // notification dabane par usi app me khule
