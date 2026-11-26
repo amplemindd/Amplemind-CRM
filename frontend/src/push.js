@@ -22,10 +22,19 @@ export const subscribePush = async () => {
   await navigator.serviceWorker.ready;
   const { key } = await api('GET', 'push/key');
   if (!key) return false; // server par VAPID keys set nahi
+  const want = keyBytes(key);
   let sub = await reg.pushManager.getSubscription();
+  // Server ki VAPID key badal gayi ho to purani subscription kaam nahi karti: hatao aur nayi banao
+  if (sub) {
+    const have = sub.options && sub.options.applicationServerKey ? new Uint8Array(sub.options.applicationServerKey) : null;
+    if (have && (have.length !== want.length || have.some((b, i) => b !== want[i]))) { try { await sub.unsubscribe(); } catch (e) { /* ignore */ } sub = null; }
+  }
   if (!sub) {
-    try { sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: keyBytes(key) }); }
-    catch (e) { return false; }
+    try { sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want }); }
+    catch (e) {
+      try { const old = await reg.pushManager.getSubscription(); if (old) await old.unsubscribe(); sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: want }); }
+      catch (e2) { return false; }
+    }
   }
   await api('POST', 'push/subscribe', { subscription: sub.toJSON(), app: MODE });
   return true;

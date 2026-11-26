@@ -84,7 +84,11 @@ export function LiveProvider({ children }) {
     registerSW();
     if (pushSupported() && Notification.permission === 'granted') subscribePush().catch(() => {});
     closeNotifications();
-    const vis = () => { if (!document.hidden) closeNotifications(); };
+    const vis = () => {
+      if (document.hidden) return;
+      closeNotifications();
+      if (pushSupported()) { setPerm(Notification.permission); if (Notification.permission === 'granted') subscribePush().catch(() => {}); } // app wapas khule: subscription fresh
+    };
     document.addEventListener('visibilitychange', vis);
     return () => document.removeEventListener('visibilitychange', vis);
   }, [user]);
@@ -332,6 +336,12 @@ export function LiveProvider({ children }) {
           <span>🔔 Turn on notifications to get messages, tasks and calls even when the app is closed.</span>
           <button type="button" className="btn primary" onClick={enableNotif}>Turn on</button>
           <button type="button" className="btn" onClick={() => setPerm('later')}>Not now</button>
+        </div>
+      )}
+      {perm === 'denied' && !call && !incoming && (
+        <div className="notifbar" role="region" aria-label="Notifications blocked">
+          <span>🔕 Notifications are blocked. Turn them on in your phone's app / browser settings (Notifications → Allow) to get alerts when the app is closed.</span>
+          <button type="button" className="btn" onClick={() => setPerm('later')}>OK</button>
         </div>
       )}
       {incoming && !call && (
