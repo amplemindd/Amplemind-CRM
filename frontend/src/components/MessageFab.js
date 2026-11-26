@@ -9,6 +9,9 @@ const ICON = { image: '📷', audio: '🎤', file: '📎' }, LABEL = { image: 'P
 const preview = t => (!t.last_attach && !t.last_body ? 'No messages yet'
   : (t.last_attach ? ICON[t.last_attach] + ' ' : '') + (t.last_body ? t.last_body.slice(0, 44) : LABEL[t.last_attach]));
 
+// Gol avatar: photo ho to photo, nahi to naam ka pehla akshar
+function Av({ photo, name }) { return <span className="av">{photo ? <img src={photo} alt="" /> : String(name || '?')[0].toUpperCase()}</span>; }
+
 // Page ke neeche-right corner ka Messages button. Dabane par WhatsApp jaisa chat khulta hai.
 // who = 'admin' (employees ki list + chat) ya 'employee' (admin se seedhi chat). count = unread messages
 export default function MessageFab({ who, count = 0 }) {
@@ -58,7 +61,7 @@ export default function MessageFab({ who, count = 0 }) {
             <>
               <div className="wahead">
                 <button type="button" className="btn icon" aria-label="Back to list" onClick={() => setSel(null)}><Icon name="back" /></button>
-                <span className="av">{cur.name[0].toUpperCase()}</span>
+                <Av photo={cur.photo} name={cur.name} />
                 <div className="wt"><b>{cur.name}</b><small>{cur.department || cur.role || 'Employee'}</small></div>
                 <button type="button" className="btn icon callbtn" aria-label={`Call ${cur.name}`} title="Voice call" disabled={inCall} onClick={() => startCall({ employee_id: cur.id, name: cur.name })}><PhoneIcon /></button>
                 <button type="button" className="btn icon callbtn" aria-label={`Video call ${cur.name}`} title="Video call" disabled={inCall} onClick={() => startCall({ employee_id: cur.id, name: cur.name, video: true })}><VideoIcon /></button>
@@ -76,7 +79,7 @@ export default function MessageFab({ who, count = 0 }) {
                 <div className="search"><Icon name="search" /><input aria-label="Search employee" placeholder="Search employee…" value={q} onChange={e => setQ(e.target.value)} /></div>
                 {threads === null ? <div style={{ padding: 16 }}><div className="sk" /></div> : list.length === 0 ? <p className="muted" style={{ padding: 16 }}>No employees found.</p> : list.map(t => (
                   <button type="button" key={t.id} className="mrow" onClick={() => { setSel(t.id); loadThreads(); }}>
-                    <div className="row"><span className="av">{t.name[0].toUpperCase()}</span>
+                    <div className="row"><Av photo={t.photo} name={t.name} />
                       <div className="mtxt"><b>{t.name}</b><small>{t.department || t.role || 'Employee'}</small><span className="muted">{preview(t)}</span></div></div>
                     <div className="mmeta">{t.last_at && <small>{timeAgo(t.last_at)}</small>}
                       {t.unread > 0 && <span className="cnt">{t.unread}</span>}

@@ -219,16 +219,23 @@ export default function Chat({ load, send, me, height = 340, placeholder = 'Type
 
   const typing = text.trim().length > 0;
   let lastDay = '';
+  // Ek jaise lagatar system messages (jaise "marked as completed") ek hi baar dikhao, count ke saath
+  const shown = [];
+  (msgs || []).forEach(m => {
+    const prev = shown[shown.length - 1];
+    if (m.sender === 'system' && prev && prev.sender === 'system' && prev.body === m.body && dayLabel(prev.created_at) === dayLabel(m.created_at)) { prev.n += 1; prev.created_at = m.created_at; return; }
+    shown.push({ ...m, n: 1 });
+  });
   return (
     <div className={'chat' + (fill ? ' fill' : '')}>
       <div className="chat-box" ref={box} onScroll={onScroll} style={fill ? undefined : { height }}>
-        {msgs === null ? <p className="muted c">Loading…</p> : msgs.length === 0 ? <p className="muted c" style={{ margin: 'auto' }}>{empty}</p> : msgs.map(m => {
+        {msgs === null ? <p className="muted c">Loading…</p> : msgs.length === 0 ? <p className="muted c" style={{ margin: 'auto' }}>{empty}</p> : shown.map(m => {
           const day = dayLabel(m.created_at), head = day !== lastDay ? day : ''; lastDay = day;
           const mine = m.sender === me, read = me === 'admin' ? m.read_employee : m.read_admin;
           return (
             <div key={m.id} style={{ display: 'contents' }}>
               {head && <div className="chat-day"><span>{head}</span></div>}
-              {m.sender === 'system' ? <div className="chat-sys"><span>{m.body}</span></div> : (
+              {m.sender === 'system' ? <div className="chat-sys"><span>{m.body}{m.n > 1 && <b className="sysn"> ×{m.n}</b>}<small className="syst">{fmtTime(m.created_at)}</small></span></div> : (
                 <div className={'bub ' + (mine ? 'me' : 'them') + (m.attach_type ? ' has-att' : '')}>
                   {!mine && <b className="who">{m.sender_name}</b>}
                   {m.attach_type && <Att m={m} me={me} onOpen={setBig} onMedia={onMedia} />}

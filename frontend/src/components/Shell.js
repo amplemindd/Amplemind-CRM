@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
+import { api } from '../api';
 import { useAuth } from './AuthContext';
 import Icon from './Icon';
 import { LiveProvider } from './LiveProvider';
@@ -27,6 +28,18 @@ export default function Shell({ portal, root, nav, badges = {}, theme = '', chil
   }, [items, pathname, root]);
   const title = current ? current[1] : pathname === root ? 'Dashboard' : portal;
   const initial = String((user && user.name) || '?')[0].toUpperCase();
+  const uid = user && user.id, urole = user && user.role;
+  const [photo, setPhoto] = useState('');
+  // Employee ki profile photo topbar / menu me dikhao (admin ki photo nahi hoti, uska pehla akshar dikhta hai)
+  useEffect(() => {
+    if (urole !== 'employee') { setPhoto(''); return undefined; }
+    let on = true;
+    api('GET', 'my/profile').then(p => { if (on) setPhoto((p && p.photo) || ''); }).catch(() => {});
+    const h = e => setPhoto(typeof e.detail === 'string' ? e.detail : '');
+    window.addEventListener('amp-photo', h); // My profile se photo badalte hi yahan bhi badal jaye
+    return () => { on = false; window.removeEventListener('amp-photo', h); };
+  }, [uid, urole]);
+  const avatar = photo ? <img src={photo} alt="" /> : initial;
 
   useEffect(() => { setOpen(false); }, [pathname]);
   useEffect(() => { // menu khula ho to peeche ka page scroll na ho, Esc se band ho
@@ -51,7 +64,7 @@ export default function Shell({ portal, root, nav, badges = {}, theme = '', chil
       <header className="topbar">
         <button type="button" className="tb-btn" aria-label="Open menu" aria-expanded={open} onClick={() => setOpen(true)}><Icon name="menu" /></button>
         <div className="tb-title"><b>{title}</b><small>Amplemind {portal}</small></div>
-        <span className="av tb-av" aria-hidden="true">{initial}</span>
+        <span className="av tb-av" aria-hidden="true">{avatar}</span>
       </header>
       {open && <div className="scrim" onClick={() => setOpen(false)} />}
       <aside className={'side ' + (open ? 'open' : '')} aria-label="Main menu">
@@ -66,7 +79,7 @@ export default function Shell({ portal, root, nav, badges = {}, theme = '', chil
               </NavLink>))}
           </div>))}
         <div className="me">
-          <span className="av">{initial}</span>
+          <span className="av">{avatar}</span>
           <div><b>{user && user.name}</b><small>{user && user.role === 'admin' ? 'Administrator' : (user && user.title) || 'Employee'}</small></div>
           <button type="button" className="btn icon" title="Log out" aria-label="Log out" onClick={logout}><Icon name="logout" /></button>
         </div>

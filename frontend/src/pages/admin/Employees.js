@@ -35,6 +35,11 @@ const make = hr => ({
   detailFields: ['id', 'department', 'role', 'phone', 'email', 'joined', 'referred_by', 'address', 'aadhaar', 'bank_holder', 'bank_name', 'bank_account', 'ifsc', 'branch', 'upi', 'notes', ...(hr ? [] : ['login'])],
   detailTop: r => (r.photo ? <img className="dphoto" src={r.photo} alt={r.name} /> : null),
   render: {
+    name: r => (
+      <div className="pn">
+        <span className="av sm">{r.photo ? <img src={r.photo} alt="" /> : String(r.name || '?')[0].toUpperCase()}</span>
+        <div><b>{r.name || '—'}</b><small>{r.email || r.phone}</small></div>
+      </div>),
     id: r => <b style={{ color: 'var(--primary)' }}>EMP-{String(r.id).padStart(3, '0')}</b>,
     login: r => r.username ? (
       <div><span className={'pill ' + (r.login_enabled ? 'green' : 'gray')}>{r.login_enabled ? 'Enabled' : 'Disabled'}</span>
