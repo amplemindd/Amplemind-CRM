@@ -43,6 +43,7 @@ export default function ListPage({ resource, cfg }) {
   const [page, setPage] = useState(1);
   const [checked, setChecked] = useState([]);
   const [openId, setOpenId] = useState(null);
+  const [showF, setShowF] = useState(false); // phone par filters chhupe rehte hain, button se khulte hain
   const [editing, setEditing] = useState(undefined); // undefined=band, null=new, row=edit
   const size = cfg.pageSize || 8;
   const load = useCallback(() => api('GET', resource).then(setRows).catch(e => { setRows([]); ui.toast(e.message, 'err'); }), [resource, ui]);
@@ -127,11 +128,16 @@ export default function ListPage({ resource, cfg }) {
 
       <div className="tools">
         <div className="search"><Icon name="search" /><input aria-label="Search" placeholder={`Search ${cfg.title.toLowerCase()}…`} value={q} onChange={e => setQ(e.target.value)} /></div>
-        {(cfg.filters || []).map(f => (
-          <select key={f.field} className="sel" aria-label={f.label} value={fv[f.field] || ''} onChange={e => setFv({ ...fv, [f.field]: e.target.value })}>
-            <option value="">{f.label}: All</option>{optsFor(f).map(o => <option key={o} value={o}>{o}</option>)}
-          </select>))}
-        {cfg.period && <select className="sel" aria-label="Date" value={period} onChange={e => setPeriod(e.target.value)}>{PERIODS.map(p => <option key={p}>{p}</option>)}</select>}
+        {((cfg.filters || []).length > 0 || cfg.period) && (
+          <button type="button" className="btn filterbtn" aria-expanded={showF} onClick={() => setShowF(v => !v)}><Icon name="settings" />Filters
+            {(Object.values(fv).filter(Boolean).length + (period !== 'All time' ? 1 : 0)) > 0 && <span className="cnt">{Object.values(fv).filter(Boolean).length + (period !== 'All time' ? 1 : 0)}</span>}</button>)}
+        <div className={'filters ' + (showF ? 'show' : '')}>
+          {(cfg.filters || []).map(f => (
+            <select key={f.field} className="sel" aria-label={f.label} value={fv[f.field] || ''} onChange={e => setFv({ ...fv, [f.field]: e.target.value })}>
+              <option value="">{f.label}: All</option>{optsFor(f).map(o => <option key={o} value={o}>{o}</option>)}
+            </select>))}
+          {cfg.period && <select className="sel" aria-label="Date" value={period} onChange={e => setPeriod(e.target.value)}>{PERIODS.map(p => <option key={p}>{p}</option>)}</select>}
+        </div>
         {(Object.values(fv).some(Boolean) || period !== 'All time' || q) && <button className="btn sm" onClick={() => { setFv({}); setPeriod('All time'); setQ(''); }}>Clear</button>}
       </div>
       {tabs && <div className="tabs">{tabs.map(([t, fn]) => (
@@ -154,14 +160,14 @@ export default function ListPage({ resource, cfg }) {
                 {!base.length && !cfg.noAdd && <button className="btn primary" onClick={() => startAdd()}><Icon name="plus" />{cfg.addLabel || `Add ${cfg.noun}`}</button>}
               </div>
             ) : (
-              <div className="scroll"><table>
+              <div className="scroll"><table className="rt">
                 <thead><tr>
                   {!cfg.noDelete && <th className="chk"><input type="checkbox" aria-label="Select all" checked={allOn} onChange={e => setChecked(e.target.checked ? [...new Set([...checked, ...view.map(r => r.id)])] : checked.filter(id => !view.some(r => r.id === id)))} /></th>}
                   {cfg.cols.map(k => <th key={k} className={(isMoney(k) ? 'num ' : '') + 'c-' + k}>{label(k)}</th>)}<th className="act-cell">Actions</th></tr></thead>
                 <tbody>{view.map(r => (
                   <tr key={r.id} className={open && open.id === r.id ? 'sel' : ''}>
                     {!cfg.noDelete && <td className="chk"><input type="checkbox" aria-label="Select row" checked={checked.includes(r.id)} onChange={e => setChecked(e.target.checked ? [...checked, r.id] : checked.filter(id => id !== r.id))} /></td>}
-                    {cfg.cols.map(k => <td key={k} className={(isMoney(k) ? 'num ' : '') + 'c-' + k}>{cell(k, r)}</td>)}
+                    {cfg.cols.map(k => <td key={k} data-label={label(k)} className={(isMoney(k) ? 'num ' : '') + 'c-' + k + (k === cfg.primary ? ' is-prim' : '')}>{cell(k, r)}</td>)}
                     <td className="act-cell"><div className="acts">
                       {!cfg.noDetail && <button className="btn icon" title="View" aria-label="View" onClick={() => setOpenId(r.id)}><Icon name="eye" /></button>}
                       {acts(r).map(([l, fn]) => <button key={l} className={'btn icon ' + (l === 'WhatsApp' ? 'wa-i' : '')} title={l} aria-label={l} onClick={fn}><Icon name={ACT_ICON[l] || 'arrow'} /></button>)}
@@ -184,6 +190,7 @@ export default function ListPage({ resource, cfg }) {
               </div>}
             </div>)}
         </div>
+        {open && <div className="dscrim" onClick={() => setOpenId(null)} />}
         {detail}
       </div>
       {editing !== undefined && <FormDrawer resource={resource} cfg={cfg} row={editing} onClose={() => setEditing(undefined)} onSaved={() => { setEditing(undefined); load(); }} />}

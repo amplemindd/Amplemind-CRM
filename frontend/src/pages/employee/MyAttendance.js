@@ -21,11 +21,11 @@ export default function MyAttendance() {
       <div className="dash">
         <div className="panel">
           {data.rows.length === 0 ? <div className="empty"><h3>No attendance yet this month</h3><p>Check in to start today’s record.</p></div> : (
-            <div className="scroll"><table style={{ minWidth: 520 }}>
+            <div className="scroll"><table className="rt">
               <thead><tr><th>Date</th><th>In</th><th>Out</th><th>Worked</th><th>Day note</th></tr></thead>
               <tbody>{data.rows.map(r => (
-                <tr key={r.id}><td><b>{fmtDate(r.att_date)}</b></td><td>{fmtTime(r.check_in)}</td><td>{r.check_out ? fmtTime(r.check_out) : <span className="pill amber">Working</span>}</td>
-                  <td>{fmtMins(r.minutes)}</td><td>{r.note || <span className="muted">—</span>}</td></tr>))}</tbody>
+                <tr key={r.id}><td className="is-prim" data-label="Date"><b>{fmtDate(r.att_date)}</b></td><td data-label="In">{fmtTime(r.check_in)}</td><td data-label="Out">{r.check_out ? fmtTime(r.check_out) : <span className="pill amber">Working</span>}</td>
+                  <td data-label="Worked">{fmtMins(r.minutes)}</td><td data-label="Day note">{r.note || <span className="muted">—</span>}</td></tr>))}</tbody>
             </table></div>)}
         </div>
         <div><AttendanceCard today={data.today} reload={load} /></div>

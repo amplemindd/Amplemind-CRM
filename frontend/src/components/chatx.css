@@ -69,9 +69,13 @@
 .walist .mrow .row{display:flex;gap:10px;align-items:center;min-width:0}
 @keyframes wafade{from{opacity:0}to{opacity:1}}
 
+/* mobile / tablet: neeche bottom navigation hota hai, isliye button uske upar */
+@media(max-width:960px){
+  .fab{right:14px;bottom:calc(var(--bn,62px) + var(--sab,0px) + 14px);width:54px;height:54px}
+  .wapanel{right:14px;bottom:calc(var(--bn,62px) + var(--sab,0px) + 78px);height:min(620px,calc(100vh - var(--bn,62px) - 130px));height:min(620px,calc(100dvh - var(--bn,62px) - 130px))}
+}
 @media(max-width:600px){
   .wapanel{inset:0;width:auto;height:auto;border-radius:0;box-shadow:none}
   .wahead{padding-top:max(10px,env(safe-area-inset-top))}
-  .fab{right:16px;bottom:16px}
-  .app ~ .toasts{bottom:84px}
+  .wa-menu{left:8px;right:8px;grid-template-columns:repeat(4,1fr);width:auto}
 }

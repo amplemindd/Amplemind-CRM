@@ -134,9 +134,9 @@ export default function QuotationForm() {
                   <div className="qrow" key={i}>
                     <input aria-label="Item" list="prod-list" placeholder="Item name" value={it.name} onChange={e => nameChange(i, e.target.value)} />
                     <input aria-label="Description" placeholder="Description" value={it.desc} onChange={e => setItem(i, { desc: e.target.value })} />
-                    <input aria-label="Quantity" type="number" min="1" value={it.qty} onChange={e => setItem(i, { qty: e.target.value })} />
-                    <input aria-label="Rate" type="number" min="0" placeholder="0" value={it.rate} onChange={e => setItem(i, { rate: e.target.value })} />
-                    <input aria-label="Discount percent" type="number" min="0" max="100" value={it.disc} onChange={e => setItem(i, { disc: e.target.value })} />
+                    <input aria-label="Quantity" placeholder="Qty" type="number" min="1" value={it.qty} onChange={e => setItem(i, { qty: e.target.value })} />
+                    <input aria-label="Rate" type="number" min="0" placeholder="Rate ₹" value={it.rate} onChange={e => setItem(i, { rate: e.target.value })} />
+                    <input aria-label="Discount percent" placeholder="Disc %" type="number" min="0" max="100" value={it.disc} onChange={e => setItem(i, { disc: e.target.value })} />
                     <b className="r qamt">{inr(amt)}</b>
                     <button className="btn icon del" aria-label="Remove item" onClick={() => removeItem(i)}><Icon name="trash" /></button>
                   </div>);

@@ -29,14 +29,14 @@ export default function Attendance({ base = 'attendance' }) {
         {!day ? <Skeleton /> : day.length === 0 ? (
           <div className="empty"><h3>No active employees</h3><p>Add employees first from the Employees page.</p></div>
         ) : (
-          <div className="scroll"><table>
+          <div className="scroll"><table className="rt">
             <thead><tr><th>Employee</th><th>Status</th><th>Check in</th><th>Check out</th><th>Worked</th><th>Day note</th></tr></thead>
             <tbody>{day.map(r => (
               <tr key={r.id}>
-                <td><div className="who"><span className="av">{String(r.name || '?')[0].toUpperCase()}</span><div><b>{r.name}</b><small>{r.role}</small></div></div></td>
-                <td><span className={'pill ' + (r.check_in ? 'green' : 'red')}>{r.check_in ? (r.check_out ? 'Present' : 'Working') : 'Absent'}</span></td>
-                <td>{fmtTime(r.check_in)}</td><td>{fmtTime(r.check_out)}</td><td>{fmtMins(r.minutes)}</td>
-                <td>{r.note || <span className="muted">—</span>}</td>
+                <td className="is-prim" data-label="Employee"><div className="who"><span className="av">{String(r.name || '?')[0].toUpperCase()}</span><div><b>{r.name}</b><small>{r.role}</small></div></div></td>
+                <td data-label="Status"><span className={'pill ' + (r.check_in ? 'green' : 'red')}>{r.check_in ? (r.check_out ? 'Present' : 'Working') : 'Absent'}</span></td>
+                <td data-label="Check in">{fmtTime(r.check_in)}</td><td data-label="Check out">{fmtTime(r.check_out)}</td><td data-label="Worked">{fmtMins(r.minutes)}</td>
+                <td data-label="Day note">{r.note || <span className="muted">—</span>}</td>
               </tr>))}</tbody>
           </table></div>)}
       </div>
@@ -47,12 +47,12 @@ export default function Attendance({ base = 'attendance' }) {
       </div>
       <div className="panel">
         {!sum ? <Skeleton /> : sum.length === 0 ? <div className="empty"><h3>No active employees</h3></div> : (
-          <div className="scroll"><table>
+          <div className="scroll"><table className="rt">
             <thead><tr><th>Employee</th><th className="num">Days present</th><th className="num">Total hours</th><th className="num">Average per day</th></tr></thead>
             <tbody>{sum.map(r => (
               <tr key={r.id}>
-                <td><div className="who"><span className="av">{String(r.name || '?')[0].toUpperCase()}</span><b>{r.name}</b></div></td>
-                <td className="num">{r.days}</td><td className="num">{fmtMins(r.minutes)}</td><td className="num">{r.days ? fmtMins(Math.round(r.minutes / r.days)) : '—'}</td>
+                <td className="is-prim" data-label="Employee"><div className="who"><span className="av">{String(r.name || '?')[0].toUpperCase()}</span><b>{r.name}</b></div></td>
+                <td className="num" data-label="Days present">{r.days}</td><td className="num" data-label="Total hours">{fmtMins(r.minutes)}</td><td className="num" data-label="Average per day">{r.days ? fmtMins(Math.round(r.minutes / r.days)) : '—'}</td>
               </tr>))}</tbody>
           </table></div>)}
       </div>

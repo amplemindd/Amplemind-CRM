@@ -60,16 +60,16 @@ export default function EmployeeLogins() {
           <div className="empty"><Icon name="inbox" /><h3>{isAll ? 'No employees yet' : `No ${d.label} login yet`}</h3><p>Create the first one with the New login button.</p>
             <button className="btn primary" onClick={createNew}><Icon name="plus" />New login</button></div>
         ) : (
-          <div className="scroll"><table>
+          <div className="scroll"><table className="rt">
             <thead><tr><th>Employee</th>{isAll && <th>Department</th>}<th>Username</th><th>Access</th><th>Last login</th><th /></tr></thead>
             <tbody>{list.map(r => (
               <tr key={r.id}>
-                <td><div><b>{r.name}</b><small>{r.phone || r.role}</small></div></td>
-                {isAll && <td>{r.department ? <span className="pill blue">{r.department}</span> : <span className="muted">Not set</span>}</td>}
-                <td>{r.username ? '@' + r.username : <span className="muted">No login yet</span>}</td>
-                <td>{r.username ? <span className={'pill ' + (r.login_enabled ? 'green' : 'gray')}>{r.login_enabled ? 'Enabled' : 'Disabled'}</span> : <span className="muted">—</span>}</td>
-                <td>{r.last_login ? fmtDate(r.last_login) : <span className="muted">Never</span>}</td>
-                <td><div className="acts"><button className="btn sm tint" onClick={manageLogin(r, load, ui)}><Icon name="key" />{r.username ? 'Edit login' : 'Create login'}</button></div></td>
+                <td className="is-prim" data-label="Employee"><div><b>{r.name}</b><small>{r.phone || r.role}</small></div></td>
+                {isAll && <td data-label="Department">{r.department ? <span className="pill blue">{r.department}</span> : <span className="muted">Not set</span>}</td>}
+                <td data-label="Username">{r.username ? '@' + r.username : <span className="muted">No login yet</span>}</td>
+                <td data-label="Access">{r.username ? <span className={'pill ' + (r.login_enabled ? 'green' : 'gray')}>{r.login_enabled ? 'Enabled' : 'Disabled'}</span> : <span className="muted">—</span>}</td>
+                <td data-label="Last login">{r.last_login ? fmtDate(r.last_login) : <span className="muted">Never</span>}</td>
+                <td className="rt-act"><div className="acts"><button className="btn sm tint" onClick={manageLogin(r, load, ui)}><Icon name="key" />{r.username ? 'Edit login' : 'Create login'}</button></div></td>
               </tr>))}</tbody>
           </table></div>)}
       </div>
@@ -77,9 +77,9 @@ export default function EmployeeLogins() {
       {!isAll && noDept.length > 0 && (
         <>
           <div className="phead" style={{ marginTop: 30 }}><div><h1 style={{ fontSize: 18 }}>Employees without a department</h1><p>Choose a department for them so they can log in.</p></div></div>
-          <div className="panel"><div className="scroll"><table><tbody>{noDept.map(r => (
-            <tr key={r.id}><td><b>{r.name}</b></td><td>{r.role || '—'}</td>
-              <td><div className="acts"><button className="btn sm tint" onClick={manageLogin(r, load, ui)}><Icon name="key" />{r.username ? 'Set department' : 'Create login'}</button></div></td></tr>))}</tbody></table></div></div>
+          <div className="panel"><div className="scroll"><table className="rt"><tbody>{noDept.map(r => (
+            <tr key={r.id}><td className="is-prim" data-label="Employee"><b>{r.name}</b></td><td data-label="Role">{r.role || '—'}</td>
+              <td className="rt-act"><div className="acts"><button className="btn sm tint" onClick={manageLogin(r, load, ui)}><Icon name="key" />{r.username ? 'Set department' : 'Create login'}</button></div></td></tr>))}</tbody></table></div></div>
         </>)}
     </>
   );
