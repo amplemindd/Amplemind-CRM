@@ -122,3 +122,18 @@ table.rt .acts .btn.icon.del{background:var(--ico-bg);color:var(--ico-grey)}
 /* WhatsApp button bhi neutral (grey/white/black) */
 .btn.wa,.btn.wa:hover{background:#fff;color:#1a1d24;border-color:var(--line)}
 .btn.wa:hover{background:var(--ico-bg)}
+
+/* =====================================================================
+   FIX: mobile par page screen se chauda ho jata tha (right side kat jati thi)
+   Wajah: grid column "1fr" andar ke lambe content (dropdown / date) ke hisaab se failta hai.
+   minmax(0,1fr) + min-width:0 se column kabhi screen se bada nahi hoga.
+   ===================================================================== */
+@media (max-width:1100px){
+  .qgrid{grid-template-columns:minmax(0,1fr)}
+}
+.qgrid>*,.qgrid .card,.qcard,.qcard .fg,.qcard .fg>div{min-width:0;max-width:100%}
+.page{min-width:0;max-width:100%}
+.app{overflow-x:clip}
+.qcard input,.qcard select,.qcard textarea{max-width:100%;min-width:0;box-sizing:border-box}
+.qcard select{text-overflow:ellipsis;overflow:hidden;white-space:nowrap}
+.qhead .sel{max-width:100%;text-overflow:ellipsis}
