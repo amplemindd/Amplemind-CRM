@@ -71,3 +71,54 @@ table.rt .acts .btn.icon.del{background:var(--ico-bg);color:var(--ico-grey)}
 .aprofile .imgbox{width:96px;height:96px;border-style:solid;border-color:var(--line)}
 .card h3 em{background:var(--ico-bg);color:var(--ico-black)}
 .side .side-x,.side .side-x:hover{color:#fff}
+
+/* =====================================================================
+   Chat: call log (Missed call / Voice call / Video call) - saaf, chhoti pill
+   ===================================================================== */
+.chat-sys{margin:8px 0}
+.chat-sys span,.chat-sys span:hover{display:inline-flex;flex-wrap:nowrap;align-items:center;justify-content:center;gap:6px;max-width:88%;
+  background:#fff;color:#2f3645;border:1px solid #e1e6ee;box-shadow:0 1px 2px rgba(16,26,46,.06);
+  font-size:12.5px;font-weight:600;line-height:1.35;padding:6px 14px;border-radius:99px;filter:grayscale(1)}
+.chat-sys .sysn{font-weight:800;color:#2f3645}
+.chat-sys .syst{flex-basis:auto;margin-left:4px;padding-left:8px;border-left:1px solid #dfe4ec;font-size:11px;font-weight:500;color:#7a8497;opacity:1;white-space:nowrap}
+.chat-day{margin:14px 0 8px}
+.chat-day span{background:#e4e9f1;color:#5b6577;box-shadow:none;letter-spacing:.02em}
+
+/* =====================================================================
+   Mobile: form pages (Quotation waghera) - kam lambe, compact, thumb-friendly
+   ===================================================================== */
+@media (max-width:720px){
+  .qcard{padding:14px 14px 16px;border-radius:16px;margin-bottom:12px}
+  .qcard h3{font-size:15px;margin-bottom:10px}
+
+  /* chhote fields 2 columns me, bade fields poori chaudai me */
+  .qcard .fg{grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 10px}
+  .qcard .fg>.w,.qcard .fg>div:nth-child(2),.qcard .fg>div:nth-child(5){grid-column:1/-1}
+  .qcard .fg label,.qcard .fg .chk{font-size:12.5px;margin-bottom:5px;color:#3a4252}
+  .qcard .fg input:not([type=checkbox]),.qcard .fg select,.qcard .fg textarea{font-size:16px;min-height:44px;padding:10px 12px;border-radius:12px;width:100%}
+  .qcard .fg textarea{min-height:76px}
+  .qcard .fg input[type=date]{min-width:0;-webkit-appearance:none;appearance:none;background:#fff;line-height:1.2}
+  .qcard .fg select{background-position:right 12px center}
+
+  /* Items */
+  .qhead{gap:8px}.qhead .row-gap{display:flex;gap:8px;width:100%}
+  .qhead .sel{flex:1.4;min-width:0;min-height:42px;font-size:15px}
+  .qhead .btn{flex:1;min-height:42px}
+  .qrow{grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;padding:12px;border-radius:14px;background:#f7f8fb}
+  .qrow input{font-size:16px;min-height:42px;padding:9px 11px;border-radius:10px;background:#fff}
+  .qrow>:nth-child(6){align-self:center;font-size:17px}
+  .qrow>:nth-child(7){align-self:center}
+
+  /* Summary + buttons */
+  .qside{margin-top:2px}
+  .sumrows .grand{font-size:20px}
+  .qbtns{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+  .qbtns .btn{min-height:46px;justify-content:center}
+  .qbtns .btn.primary{grid-column:1/-1;min-height:50px;font-size:16px}
+  .qbtns .btn:nth-child(5){grid-column:auto}
+  .page{padding-bottom:110px}
+}
+
+/* WhatsApp button bhi neutral (grey/white/black) */
+.btn.wa,.btn.wa:hover{background:#fff;color:#1a1d24;border-color:var(--line)}
+.btn.wa:hover{background:var(--ico-bg)}
